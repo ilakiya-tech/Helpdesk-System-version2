@@ -15,8 +15,9 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    // Usually we would use application.properties, but for this exercise we will hardcode a secure 256-bit key
-    private final String jwtSecret = "413F4428472B4B6250655368566D5970337336763979244226452948404D6351";
+    @Value("${app.jwt.secret}")
+    private String jwtSecret;
+
     private final int jwtExpirationMs = 86400000; // 24 hours
 
     private Key getSigningKey() {

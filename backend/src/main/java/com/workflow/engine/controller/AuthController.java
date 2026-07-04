@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,8 +35,8 @@ public class AuthController {
     private final JwtTokenProvider tokenProvider;
     private final PasswordEncoder passwordEncoder;
 
-    // The secret key required for admin registration
-    private static final String ADMIN_SECRET_KEY = "carbochem-secret-2026";
+    @Value("${app.org.secret}")
+    private String adminSecretKey;
 
     public AuthController(UserRepository userRepository,
                           AuthenticationManager authenticationManager,
@@ -101,7 +102,7 @@ public class AuthController {
 
         // Validate admin registration
         if (AppConstants.ROLE_ADMIN.equals(role)) {
-            if (request.secretKey() == null || !request.secretKey().equals(ADMIN_SECRET_KEY)) {
+            if (request.secretKey() == null || !request.secretKey().equals(adminSecretKey)) {
                 response.put("success", false);
                 response.put("message", "Forbidden: Invalid Organization Secret Key");
                 return ResponseEntity.status(403).body(response);
