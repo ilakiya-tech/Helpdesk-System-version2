@@ -115,7 +115,7 @@ const API = {
       return data;
     } catch (err) {
       console.error(`API error [${path}]:`, err);
-      return { success: false, message: 'Network error – is the server running on port 8080?' };
+      return { success: false, message: 'Network error - unable to connect to the backend server.' };
     }
   },
 
