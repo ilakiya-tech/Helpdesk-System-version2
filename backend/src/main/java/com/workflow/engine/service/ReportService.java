@@ -2,11 +2,14 @@ package com.workflow.engine.service;
 
 import com.workflow.engine.config.AppConstants;
 import com.workflow.engine.entity.Ticket;
+import com.workflow.engine.entity.User;
 import com.workflow.engine.repository.TicketRepository;
+import com.workflow.engine.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,9 +21,11 @@ import java.util.stream.Collectors;
 public class ReportService {
 
     private final TicketRepository ticketRepository;
+    private final UserRepository userRepository;
 
-    public ReportService(TicketRepository ticketRepository) {
+    public ReportService(TicketRepository ticketRepository, UserRepository userRepository) {
         this.ticketRepository = ticketRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
@@ -30,8 +35,19 @@ public class ReportService {
 
         // ── Status counts ──────────────────────────────────────────────────────
         long open       = all.stream().filter(t -> AppConstants.STATUS_OPEN.equals(t.getStatus())).count();
+        long assigned   = all.stream().filter(t -> AppConstants.STATUS_ASSIGNED.equals(t.getStatus())).count();
         long inProgress = all.stream().filter(t -> AppConstants.STATUS_IN_PROGRESS.equals(t.getStatus())).count();
         long resolved   = all.stream().filter(t -> AppConstants.STATUS_RESOLVED.equals(t.getStatus())).count();
+        long closed     = all.stream().filter(t -> AppConstants.STATUS_CLOSED.equals(t.getStatus())).count();
+
+        // ── Overdue: non-terminal tickets whose resolution SLA deadline has passed ──
+        LocalDateTime now = LocalDateTime.now();
+        long overdue = all.stream()
+                .filter(t -> !AppConstants.STATUS_RESOLVED.equals(t.getStatus())
+                          && !AppConstants.STATUS_CLOSED.equals(t.getStatus()))
+                .filter(t -> t.getResolutionSlaDeadline() != null
+                          && t.getResolutionSlaDeadline().isBefore(now))
+                .count();
 
         // ── SLA distribution (slaStatus stored per ticket by the scheduler) ──
         long inSla    = ticketRepository.countBySlaStatus(AppConstants.SLA_STATUS_IN_SLA);
@@ -63,20 +79,20 @@ public class ReportService {
         List<Ticket> respondedTickets = all.stream()
                 .filter(t -> t.getFirstRespondedAt() != null && t.getResponseSlaDeadline() != null)
                 .collect(Collectors.toList());
-        long responseSlaMetCount    = respondedTickets.stream()
+        long responseSlaMetCount   = respondedTickets.stream()
                 .filter(t -> !t.getFirstRespondedAt().isAfter(t.getResponseSlaDeadline()))
                 .count();
-        long responseSla_missed     = respondedTickets.size() - responseSlaMetCount;
+        long responseSla_missed    = respondedTickets.size() - responseSlaMetCount;
 
         // ── Resolution SLA Met / Missed ───────────────────────────────────────
         List<Ticket> resolvedTickets = all.stream()
                 .filter(t -> AppConstants.STATUS_RESOLVED.equals(t.getStatus())
                         && t.getResolvedAt() != null && t.getResolutionSlaDeadline() != null)
                 .collect(Collectors.toList());
-        long resolutionSlaMetCount  = resolvedTickets.stream()
+        long resolutionSlaMetCount = resolvedTickets.stream()
                 .filter(t -> !t.getResolvedAt().isAfter(t.getResolutionSlaDeadline()))
                 .count();
-        long resolutionSla_missed   = resolvedTickets.size() - resolutionSlaMetCount;
+        long resolutionSla_missed  = resolvedTickets.size() - resolutionSlaMetCount;
 
         // ── SLA Compliance % ──────────────────────────────────────────────────
         double compliancePercent = total == 0 ? 100.0
@@ -89,11 +105,25 @@ public class ReportService {
         byPriority.put("Medium",   all.stream().filter(t -> "Medium".equals(t.getPriority())).count());
         byPriority.put("Low",      all.stream().filter(t -> "Low".equals(t.getPriority())).count());
 
+        // ── User role counts ──────────────────────────────────────────────────
+        List<User> allUsers = userRepository.findAll();
+        long activeStaff     = allUsers.stream()
+                .filter(u -> AppConstants.ROLE_STAFF.equals(u.getRole()))
+                .filter(u -> !"on_leave".equalsIgnoreCase(u.getAvailability()))
+                .count();
+        long totalConsumers  = allUsers.stream()
+                .filter(u -> AppConstants.ROLE_CONSUMER.equals(u.getRole()))
+                .count();
+        long totalUsers      = allUsers.size();
+
         // ── Build summary map ─────────────────────────────────────────────────
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("open",        open);
+        summary.put("assigned",    assigned);
         summary.put("inProgress",  inProgress);
         summary.put("resolved",    resolved);
+        summary.put("closed",      closed);
+        summary.put("overdue",     overdue);
         summary.put("total",       total);
         summary.put("inSla",             inSla);
         summary.put("atRisk",            atRisk);
@@ -107,6 +137,9 @@ public class ReportService {
         summary.put("resolutionSla_missed",   resolutionSla_missed);
         summary.put("slaCompliancePercent",   Math.round(compliancePercent * 10.0) / 10.0);
         summary.put("ticketsByPriority",      byPriority);
+        summary.put("activeStaff",    activeStaff);
+        summary.put("totalConsumers", totalConsumers);
+        summary.put("totalUsers",     totalUsers);
 
         return summary;
     }

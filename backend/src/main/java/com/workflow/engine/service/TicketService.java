@@ -71,7 +71,10 @@ public class TicketService {
         List<Ticket> allTickets = ticketRepository.findAll();
         for (Ticket t : allTickets) {
             trieEngine.insert(t.getTitle(), t.getId());
-            if (!AppConstants.STATUS_RESOLVED.equals(t.getStatus())) {
+            // Only active (non-terminal) tickets belong in the max-heap
+            boolean terminal = AppConstants.STATUS_RESOLVED.equals(t.getStatus())
+                    || AppConstants.STATUS_CLOSED.equals(t.getStatus());
+            if (!terminal) {
                 maxHeapEngine.insert(t.getId(), t.getPriorityWeight());
             }
         }
@@ -247,15 +250,24 @@ public class TicketService {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket", ticketId));
         String oldStatus = ticket.getStatus();
+
+        // Idempotency guard: reject if status is unchanged
+        if (oldStatus.equals(newStatus)) {
+            return ticket;
+        }
+
+        // Workflow transition validation
+        validateStatusTransition(oldStatus, newStatus);
+
         ticket.setStatus(newStatus);
         ticket.setPriorityWeight(computePriorityWeight(ticket));
 
-        boolean isTerminalNow = AppConstants.STATUS_RESOLVED.equals(newStatus) || "Closed".equals(newStatus);
+        boolean isTerminalNow = AppConstants.STATUS_RESOLVED.equals(newStatus)
+                || AppConstants.STATUS_CLOSED.equals(newStatus);
 
         // First response tracking: moving to In Progress counts as first response
         if (AppConstants.STATUS_IN_PROGRESS.equals(newStatus) && ticket.getFirstRespondedAt() == null) {
             ticket.setFirstRespondedAt(LocalDateTime.now());
-            // Check if response SLA was already breached at this point
             if (ticket.getResponseSlaDeadline() != null
                     && LocalDateTime.now().isAfter(ticket.getResponseSlaDeadline())) {
                 ticket.setSlaStatus(AppConstants.SLA_STATUS_BREACHED);
@@ -265,7 +277,6 @@ public class TicketService {
         // Freeze SLA when ticket is resolved or closed
         if (isTerminalNow) {
             ticket.setResolvedAt(LocalDateTime.now());
-            // If it hasn't been breached before, check if resolution deadline was breached
             if (!AppConstants.SLA_STATUS_BREACHED.equals(ticket.getSlaStatus())) {
                 if (ticket.getResolutionSlaDeadline() != null
                         && LocalDateTime.now().isAfter(ticket.getResolutionSlaDeadline())) {
@@ -274,39 +285,77 @@ public class TicketService {
                     ticket.setSlaStatus(AppConstants.SLA_STATUS_IN_SLA);
                 }
             }
-            // SLA is now frozen — no further scheduler updates will affect this ticket
         } else {
-            // Recalculate live SLA status for active tickets
             recalculateSlaStatus(ticket);
         }
 
         Ticket saved = ticketRepository.save(ticket);
 
-        if (AppConstants.STATUS_RESOLVED.equals(newStatus) || "Closed".equals(newStatus)) {
+        if (isTerminalNow) {
             maxHeapEngine.remove(saved.getId());
         } else {
             maxHeapEngine.increaseKey(saved.getId(), saved.getPriorityWeight());
         }
 
-        log.info("Ticket status updated. Ticket ID: {}, Old Status: {}, New Status: {}, Changed By: {}", 
+        log.info("Ticket status updated. Ticket ID: {}, Old Status: {}, New Status: {}, Changed By: {}",
                 saved.getId(), oldStatus, newStatus, changedByName);
         logActivity(saved.getId(), "STATUS_CHANGED:" + oldStatus + "->" + newStatus, changedByName);
         return saved;
+    }
+
+    /**
+     * Validates that a status transition follows the allowed workflow.
+     * Open -> Assigned -> In Progress -> Resolved -> Closed
+     * Throws IllegalArgumentException for invalid transitions.
+     */
+    private void validateStatusTransition(String current, String next) {
+        java.util.Set<String> allowed = new java.util.HashSet<>();
+        switch (current) {
+            case "Open"         -> allowed.addAll(java.util.List.of("Assigned", "In Progress"));
+            case "Assigned"     -> allowed.addAll(java.util.List.of("In Progress", "Open"));
+            case "In Progress"  -> allowed.addAll(java.util.List.of("Resolved"));
+            case "Resolved"     -> allowed.addAll(java.util.List.of("Closed"));
+            case "Closed"       -> { /* terminal — no transitions allowed */ }
+            default             -> allowed.addAll(java.util.List.of("Open", "Assigned", "In Progress", "Resolved", "Closed"));
+        }
+        if (!allowed.contains(next)) {
+            throw new IllegalArgumentException(
+                    "Invalid status transition: " + current + " -> " + next +
+                    ". Allowed transitions: " + allowed);
+        }
     }
 
     @Transactional
     public Ticket assignTicket(Long ticketId, String assignee, String changedByName) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket", ticketId));
+
+        // Prevent assigning a terminal ticket
+        if (AppConstants.STATUS_RESOLVED.equals(ticket.getStatus())
+                || AppConstants.STATUS_CLOSED.equals(ticket.getStatus())) {
+            throw new IllegalArgumentException(
+                    "Cannot assign a ticket with status: " + ticket.getStatus());
+        }
+
+        // Idempotency: skip if same assignee and already assigned
+        if (assignee != null && assignee.equals(ticket.getAssignedTo())) {
+            return ticket;
+        }
+
         ticket.setAssignedTo(assignee);
 
-        // Capture assigned time on first assignment only
+        // Auto-transition Open -> Assigned
+        if (AppConstants.STATUS_OPEN.equals(ticket.getStatus())) {
+            ticket.setStatus(AppConstants.STATUS_ASSIGNED);
+            logActivity(ticketId, "STATUS_CHANGED:Open->Assigned", changedByName);
+        }
+
         if (ticket.getAssignedAt() == null) {
             ticket.setAssignedAt(LocalDateTime.now());
         }
 
         Ticket saved = ticketRepository.save(ticket);
-        log.info("Ticket assigned. Ticket ID: {}, Assignee: {}, Changed By: {}", 
+        log.info("Ticket assigned. Ticket ID: {}, Assignee: {}, Changed By: {}",
                 saved.getId(), assignee, changedByName);
         logActivity(saved.getId(), "ASSIGNED:" + assignee, changedByName);
         return saved;
@@ -383,18 +432,17 @@ public class TicketService {
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void escalationSweep() {
+        // Exclude both Resolved and Closed from SLA recalculation
         List<Ticket> active = ticketRepository.findByStatusNotIn(
-                List.of(AppConstants.STATUS_RESOLVED, "Closed")
+                List.of(AppConstants.STATUS_RESOLVED, AppConstants.STATUS_CLOSED)
         );
         for (Ticket ticket : active) {
             int recomputed = computePriorityWeight(ticket);
             if (recomputed != ticket.getPriorityWeight()) {
                 ticket.setPriorityWeight(recomputed);
             }
-            // Recalculate SLA status — scheduler is the authoritative source
             String oldSlaStatus = ticket.getSlaStatus();
             recalculateSlaStatus(ticket);
-            // Only save if something changed
             if (recomputed != ticket.getPriorityWeight()
                     || !Objects.equals(oldSlaStatus, ticket.getSlaStatus())) {
                 ticketRepository.save(ticket);

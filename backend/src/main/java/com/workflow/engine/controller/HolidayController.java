@@ -57,7 +57,13 @@ public class HolidayController {
         @ApiResponse(responseCode = "401", description = "Missing or invalid authorization header"),
         @ApiResponse(responseCode = "403", description = "Insufficient permissions")
     })
-    public ResponseEntity<Holiday> createHoliday(@RequestBody @Valid Holiday holiday) {
+    public ResponseEntity<?> createHoliday(@RequestBody @Valid Holiday holiday) {
+        if (holidayRepository.existsByDate(holiday.getDate())) {
+            java.util.Map<String, Object> err = new java.util.LinkedHashMap<>();
+            err.put("success", false);
+            err.put("message", "A holiday on this date already exists");
+            return ResponseEntity.status(409).body(err);
+        }
         return ResponseEntity.ok(holidayRepository.save(holiday));
     }
 

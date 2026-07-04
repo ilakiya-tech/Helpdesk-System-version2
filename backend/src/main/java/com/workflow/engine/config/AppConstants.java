@@ -24,8 +24,10 @@ public final class AppConstants {
     // Ticket Status Values
     // -------------------------------------------------------------------------
     public static final String STATUS_OPEN        = "Open";
+    public static final String STATUS_ASSIGNED    = "Assigned";
     public static final String STATUS_IN_PROGRESS = "In Progress";
     public static final String STATUS_RESOLVED    = "Resolved";
+    public static final String STATUS_CLOSED      = "Closed";
 
     // -------------------------------------------------------------------------
     // Ticket Priority Values

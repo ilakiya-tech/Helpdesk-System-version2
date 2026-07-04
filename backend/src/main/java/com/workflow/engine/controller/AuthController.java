@@ -75,6 +75,8 @@ public class AuthController {
         response.put("username", user.getUsername());
         response.put("name",     user.getName());
         response.put("userId",   user.getId());
+        response.put("email",    user.getEmail() != null ? user.getEmail() : "");
+        response.put("mobile",   user.getMobile() != null ? user.getMobile() : "");
         return ResponseEntity.ok(response);
     }
 
@@ -95,6 +97,14 @@ public class AuthController {
         if (userRepository.existsByUsername(request.username())) {
             response.put("success", false);
             response.put("message", "Username already taken");
+            return ResponseEntity.status(409).body(response);
+        }
+
+        // Check for duplicate email (only if email is provided)
+        if (request.email() != null && !request.email().isBlank()
+                && userRepository.existsByEmail(request.email())) {
+            response.put("success", false);
+            response.put("message", "Email address is already registered");
             return ResponseEntity.status(409).body(response);
         }
 
