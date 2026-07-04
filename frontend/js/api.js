@@ -1,5 +1,5 @@
 // api.js – Carbochem Helpdesk Frontend API Client
-// Talks to Java Spring Boot backend on http://localhost:8080 (/api/*)
+// Talks to Java Spring Boot backend on https://helpdesk-system-version2-1.onrender.com (/api/*)
 //
 // INTEGRATION NOTES (2026-07-04)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -16,7 +16,7 @@
 // both delegate to getTicketById() and extract the relevant sub-array.
 
 const API = {
-  baseURL: 'http://localhost:8080/api',
+  baseURL: 'https://helpdesk-system-version2-1.onrender.com/api',
 
   getToken()    { return localStorage.getItem('token'); },
   getUsername() { return localStorage.getItem('username'); },
