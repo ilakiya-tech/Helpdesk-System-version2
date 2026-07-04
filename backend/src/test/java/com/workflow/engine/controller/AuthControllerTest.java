@@ -8,6 +8,7 @@ import com.workflow.engine.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -34,6 +35,9 @@ public class AuthControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Value("${app.org.secret}")
+    private String adminSecretKey;
 
     @BeforeEach
     public void setUp() {
@@ -73,7 +77,7 @@ public class AuthControllerTest {
                 "0987654321",
                 "Management",
                 "Available",
-                "carbochem-secret-2026"
+                adminSecretKey
         );
 
         mockMvc.perform(post("/api/users/register")
