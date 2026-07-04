@@ -1,0 +1,111 @@
+/* theme.css – Global styling updates for Carbochem */
+
+:root {
+  --primary-color: #1F3373;
+  --secondary-color: #2c4ea3;
+  --background-light: #f0f4f8;
+  --text-dark: #1f2937;
+  --text-gray: #4b5563;
+  --white: #ffffff;
+  --border-color: #d1d5db;
+}
+
+/* Base style polish */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background-light);
+  color: var(--text-dark);
+}
+
+/* Button colors */
+.btn-primary, .assign-btn, .view-details-btn, .submit-button {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #ffffff !important;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.btn-primary:hover, .assign-btn:hover, .view-details-btn:hover, .submit-button:hover {
+  background-color: var(--secondary-color) !important;
+  border-color: var(--secondary-color) !important;
+}
+
+/* Text and headers */
+.company-name, h1, h2, h5 {
+  color: var(--primary-color);
+}
+
+/* Responsive Table Wrapper */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* UI Spacing & Card Consistency */
+.card {
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  margin-bottom: 1.5rem;
+}
+
+.card-body {
+  padding: 1.5rem !important;
+}
+
+/* Calendar styling (Sunday -> light grey, Public -> green, Company -> blue) */
+.cal-day.sunday {
+  background-color: #f3f4f6 !important; /* light grey */
+  color: #4b5563 !important;
+  font-weight: 600;
+}
+
+.cal-day.holiday-public {
+  background-color: #dcfce7 !important; /* green background */
+  color: #166534 !important;
+  border: 1px solid #86efac !important;
+  font-weight: 600;
+}
+
+.cal-day.holiday-company {
+  background-color: #e0f2fe !important; /* blue background */
+  color: #0369a1 !important;
+  border: 1px solid #7dd3fc !important;
+  font-weight: 600;
+}
+
+/* Empty states */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-gray);
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+/* Loading spinner */
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: var(--primary-color);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

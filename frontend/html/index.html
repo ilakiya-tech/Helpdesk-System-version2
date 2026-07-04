@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbochem Helpdesk - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1F3373;
+            --secondary-color: #2b479e;
+            --background-light: #f0f4f8;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-light);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-container {
+            max-width: 960px;
+            width: 100%;
+            background: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .login-banner {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+        }
+        .logo-image {
+            width: 50px; height: 50px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 20px;
+        }
+        .company-name { color: var(--primary-color); font-weight: 700; font-size: 1.5rem; }
+        .user-toggle { background: var(--background-light); border-radius: 8px; padding: 4px; }
+        .user-type { flex: 1; padding: 10px; text-align: center; cursor: pointer; border-radius: 6px; font-weight: 500; color: #4b5563; transition: all 0.3s; }
+        .user-type.active { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); color: var(--primary-color); }
+        .mode-tabs .nav-link { color: #4b5563; font-weight: 500; }
+        .mode-tabs .nav-link.active { color: var(--primary-color); font-weight: 600; }
+        .btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); }
+        .btn-primary:hover { background-color: var(--secondary-color); border-color: var(--secondary-color); }
+        .login-feedback { display: none; }
+        .login-feedback.show { display: block; }
+        .panel-hidden { display: none !important; }
+        @media (min-width: 768px) {
+            .login-container { display: flex; }
+            .login-banner { width: 32%; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }
+            .login-form-area { flex: 1; padding: 2rem; }
+        }
+        @media (max-width: 767px) {
+            .login-banner { text-align: center; }
+            .login-form-area { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-banner">
+            <h1 class="h4 fw-bold mb-3">Carbochem Helpdesk</h1>
+            <p class="small mb-0 opacity-90">Access your tickets and get support for all your construction project needs.</p>
+        </div>
+        <div class="login-form-area">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="logo-image">CC</div>
+                <span class="company-name">Carbochem</span>
+            </div>
+
+            <ul class="nav nav-tabs mode-tabs mb-4" id="modeTabs">
+                <li class="nav-item"><button class="nav-link active" data-mode="login" type="button">Login</button></li>
+                <li class="nav-item"><button class="nav-link" data-mode="signup" type="button">Admin Sign Up</button></li>
+            </ul>
+
+            <!-- LOGIN PANEL -->
+            <div id="login-panel">
+                <h3 class="h5 fw-semibold mb-1">Login to your account</h3>
+                <p class="text-muted small mb-3">Select your user type and enter credentials</p>
+
+                <div class="user-toggle d-flex mb-3">
+                    <div class="user-type active" id="admin-toggle">Admin</div>
+                    <div class="user-type" id="field-toggle">Field Staff</div>
+                    <div class="user-type" id="consumer-toggle">Consumer</div>
+                </div>
+
+                <form id="login-form">
+                    <input type="hidden" id="user-type" value="admin">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mb-2" id="login-btn">Login</button>
+                    <div class="text-center">
+                        <a href="#" id="forgot-link" class="small text-decoration-none">Forgot Password?</a>
+                    </div>
+                    <div id="login-feedback" class="alert mt-3 login-feedback" role="alert"></div>
+                </form>
+            </div>
+
+            <!-- ADMIN SIGN UP PANEL -->
+            <div id="signup-panel" class="panel-hidden">
+                <h3 class="h5 fw-semibold mb-1">Admin Sign Up</h3>
+                <p class="text-muted small mb-3">Register a new admin account with the secret key</p>
+                <form id="signup-form">
+                    <div class="mb-3"><label class="form-label">Full Name</label><input type="text" class="form-control" id="su-name" required></div>
+                    <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" id="su-email" required></div>
+                    <div class="mb-3"><label class="form-label">Username</label><input type="text" class="form-control" id="su-username" required></div>
+                    <div class="mb-3"><label class="form-label">Password</label><input type="password" class="form-control" id="su-password" required minlength="6"></div>
+                    <div class="mb-3"><label class="form-label">Confirm Password</label><input type="password" class="form-control" id="su-confirm" required></div>
+                    <div class="mb-3"><label class="form-label">Secret Key</label><input type="password" class="form-control" id="su-secret" required placeholder="Enter organization secret key"></div>
+                    <button type="submit" class="btn btn-primary w-100">Create Admin Account</button>
+                    <div id="signup-feedback" class="alert mt-3 login-feedback" role="alert"></div>
+                </form>
+            </div>
+
+            <!-- FORGOT PASSWORD PANEL -->
+            <div id="forgot-panel" class="panel-hidden">
+                <h3 class="h5 fw-semibold mb-1">Reset Password</h3>
+                <p class="text-muted small mb-3">Enter your username and choose a new password</p>
+                <form id="forgot-form">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" id="fp-username" required autocomplete="username">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="fp-password" required minlength="6" autocomplete="new-password">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="fp-confirm" required minlength="6" autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="fp-btn">Reset Password</button>
+                    <div class="text-center mt-2"><a href="#" id="back-login" class="small text-decoration-none">← Back to Login</a></div>
+                    <div id="forgot-feedback" class="alert mt-3 login-feedback" role="alert"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const dashboardUrls = { admin: 'admin.html', staff: 'staff.html', consumer: 'client.html' };
+        let currentUserType = 'admin';
+
+        function showFeedback(elId, msg, ok) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            el.textContent = msg;
+            el.className = `alert mt-3 login-feedback show ${ok ? 'alert-success' : 'alert-danger'}`;
+        }
+
+        // Check for session expiry message (from JWT expiry redirect)
+        const logoutMsg = sessionStorage.getItem('logoutMessage');
+        if (logoutMsg) {
+            sessionStorage.removeItem('logoutMessage');
+            // Show after DOM is ready
+            window.addEventListener('DOMContentLoaded', () => showFeedback('login-feedback', logoutMsg, false));
+            showFeedback('login-feedback', logoutMsg, false);
+        }
+
+        document.querySelectorAll('#modeTabs .nav-link').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#modeTabs .nav-link').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const mode = btn.dataset.mode;
+                document.getElementById('login-panel').classList.toggle('panel-hidden', mode !== 'login');
+                document.getElementById('signup-panel').classList.toggle('panel-hidden', mode !== 'signup');
+                document.getElementById('forgot-panel').classList.add('panel-hidden');
+            });
+        });
+
+        ['admin-toggle','field-toggle','consumer-toggle'].forEach(id => {
+            document.getElementById(id).addEventListener('click', () => {
+                document.querySelectorAll('.user-type').forEach(el => el.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+                currentUserType = id.replace('-toggle','').replace('field','field').replace('consumer','consumer');
+                if (id === 'admin-toggle') currentUserType = 'admin';
+                else if (id === 'field-toggle') currentUserType = 'field';
+                else currentUserType = 'consumer';
+            });
+        });
+
+        document.getElementById('forgot-link').addEventListener('click', e => {
+            e.preventDefault();
+            document.getElementById('login-panel').classList.add('panel-hidden');
+            document.getElementById('signup-panel').classList.add('panel-hidden');
+            document.getElementById('forgot-panel').classList.remove('panel-hidden');
+            document.querySelectorAll('#modeTabs .nav-link').forEach(b => b.classList.remove('active'));
+        });
+
+        document.getElementById('back-login').addEventListener('click', e => {
+            e.preventDefault();
+            document.getElementById('forgot-panel').classList.add('panel-hidden');
+            document.getElementById('login-panel').classList.remove('panel-hidden');
+            document.querySelector('#modeTabs .nav-link[data-mode="login"]').classList.add('active');
+            document.getElementById('forgot-form').reset();
+        });
+
+
+        document.getElementById('login-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true; btn.textContent = 'Authenticating...';
+            try {
+                const result = await API.login(document.getElementById('username').value, document.getElementById('password').value);
+                if (result.success) {
+                    // Backend returns FLAT fields: { success, token, userRole, username, name, userId }
+                    // (no result.user wrapper)
+                    let role = result.userRole || '';
+                    if (role === 'consumer') role = 'client';
+                    localStorage.setItem('token',    result.token    || '');
+                    localStorage.setItem('userRole', role);
+                    localStorage.setItem('username', result.username || '');
+                    localStorage.setItem('userId',   String(result.userId || ''));
+                    localStorage.setItem('name',     result.name || result.username || '');
+                    localStorage.setItem('email',    result.email    || '');
+                    localStorage.setItem('mobile',   result.mobile   || '');
+                    const redirect = dashboardUrls[role] || 'index.html';
+                    showFeedback('login-feedback', 'Login successful! Redirecting...', true);
+                    setTimeout(() => { window.location.href = redirect; }, 800);
+                } else {
+                    showFeedback('login-feedback', result.message || 'Invalid credentials', false);
+                    btn.disabled = false; btn.textContent = 'Login';
+                }
+            } catch (err) {
+                showFeedback('login-feedback', 'Login failed. Please try again.', false);
+                btn.disabled = false; btn.textContent = 'Login';
+            }
+        });
+
+
+        document.getElementById('signup-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const pw = document.getElementById('su-password').value;
+            const confirm = document.getElementById('su-confirm').value;
+            if (pw !== confirm) { showFeedback('signup-feedback', 'Passwords do not match', false); return; }
+            const result = await API.registerAdmin({
+                name: document.getElementById('su-name').value,
+                email: document.getElementById('su-email').value,
+                username: document.getElementById('su-username').value,
+                password: pw,
+                secretKey: document.getElementById('su-secret').value
+            });
+            if (result.success) {
+                showFeedback('signup-feedback', 'Admin account created! Redirecting to login...', true);
+                setTimeout(() => {
+                    document.querySelector('#modeTabs .nav-link[data-mode="login"]').click();
+                    document.getElementById('username').value = document.getElementById('su-username').value;
+                }, 1500);
+            } else {
+                showFeedback('signup-feedback', result.message || 'Registration failed', false);
+            }
+        });
+
+        document.getElementById('forgot-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const username = document.getElementById('fp-username').value.trim();
+            const pw = document.getElementById('fp-password').value;
+            const confirm = document.getElementById('fp-confirm').value;
+            if (pw !== confirm) {
+                showFeedback('forgot-feedback', 'Passwords do not match', false);
+                return;
+            }
+            if (pw.length < 6) {
+                showFeedback('forgot-feedback', 'Password must be at least 6 characters', false);
+                return;
+            }
+            const btn = document.getElementById('fp-btn');
+            btn.disabled = true;
+            btn.textContent = 'Resetting...';
+            const result = await API.forgotPasswordByUsername(username, pw);
+            btn.disabled = false;
+            btn.textContent = 'Reset Password';
+            if (result.success) {
+                showFeedback('forgot-feedback', 'Password reset successfully! Redirecting to login...', true);
+                setTimeout(() => document.getElementById('back-login').click(), 2000);
+            } else {
+                showFeedback('forgot-feedback', result.message || 'Reset failed', false);
+            }
+        });
+    </script>
+</body>
+</html>

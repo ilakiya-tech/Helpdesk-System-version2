@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbochem - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/sidebar.css" rel="stylesheet">
+    <link href="../css/theme.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1F3373;
+            --secondary-color: #2b479e;
+            --background-light: #f0f4f8;
+            --text-dark: #1f2937;
+            --text-gray: #4b5563;
+            --white: #ffffff;
+            --border-color: #d1d5db;
+        }
+		.logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .company-name {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+        }
+
+        .navbar .nav-link {
+            color: var(--white) !important;
+        }
+
+        .navbar .nav-link:hover {
+            color: var(--secondary-color) !important;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-logo {
+            height: 32px;
+            width: auto;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 2rem;
+        }
+		
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+		.dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-container select,
+        .filter-container input {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            flex-grow: 1;
+        }
+
+        .ticket-table {
+            width: 100%;
+            background-color: var(--white);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .ticket-table th {
+            background-color: var(--background-light);
+            color: var(--text-gray);
+            font-weight: 600;
+            padding: 1rem;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .ticket-table th:hover {
+            background-color: #e2e8f0;
+        }
+
+        .ticket-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .ticket-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-open { background-color: #e6f2ff; color: #1e3a8a; }
+        .status-in-progress { background-color: #dbeafe; color: #1d4ed8; }
+        .status-resolved { background-color: #ddf4e4; color: #166534; }
+
+        .priority-critical { color: #dc2626; font-weight: bold; }
+        .priority-high { color: #ea580c; }
+        .priority-medium { color: #0369a1; }
+        .priority-low { color: #4b5563; }
+
+        .assign-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .assign-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .staff-dropdown {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+        }
+        
+        .sort-icon {
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .toast {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+        
+        .view-details-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 0.8rem;
+            line-height: 1;
+        }
+
+        .view-details-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .sidebar { background: var(--primary-color) !important; min-height: 100vh; width: 240px; flex-shrink: 0; }
+        .sidebar-link { color: rgba(255,255,255,0.85); text-decoration: none; display: block; padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 2px; }
+        .sidebar-link:hover, .sidebar-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+        .summary-card { background: var(--white); border-radius: 0.75rem; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; }
+        .summary-card h3 { font-size: 2rem; color: var(--primary-color); margin: 0; }
+        .summary-card p { color: var(--text-gray); margin: 0.25rem 0 0; font-size: 0.9rem; }
+        .quick-links a { text-decoration: none; }
+        .badge-unassigned { position: relative; }
+        .badge-unassigned .badge { position: absolute; top: -8px; right: -12px; font-size: 0.65rem; }
+        @media (max-width:768px) { .layout-row { flex-direction: column !important; } .sidebar { width: 100% !important; min-height: auto !important; } }
+    </style>
+</head>
+<body>
+<div class="d-flex layout-row layout-with-sidebar">
+    <aside id="sidebar-container"></aside>
+    <div class="flex-grow-1 main-content p-4">
+        <!-- Navigation Bar -->
+        <nav class="navbar navbar-expand-lg navbar-dark d-none">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="100" height="100" fill="var(--primary-color)" />
+                        <text x="50" y="50" text-anchor="middle" dy=".3em" fill="white" font-size="40" font-weight="bold">CC</text>
+                    </svg>
+                    Admin Dashboard
+                </a>
+            </div>
+        </nav>
+        
+        <div class="dashboard">
+            <div class="dashboard-header">
+                <div class="logo-container">
+                    <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="100" height="100" fill="var(--primary-color)" />
+                        <text x="50" y="50" text-anchor="middle" dy=".3em" fill="white" font-size="40" font-weight="bold">CC</text>
+                    </svg>
+                    <span class="company-name">Carbochem</span>
+                </div>
+            </div>
+
+            <div id="dashboard-section">
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3"><div class="summary-card"><h3 id="stat-users">-</h3><p>Total Users</p></div></div>
+                    <div class="col-6 col-md-3"><div class="summary-card"><h3 id="stat-staff">-</h3><p>Total Staff</p></div></div>
+                    <div class="col-6 col-md-3"><div class="summary-card"><h3 id="stat-open">-</h3><p>Open Tickets</p></div></div>
+                    <div class="col-6 col-md-3"><div class="summary-card"><h3 id="stat-holidays">-</h3><p>Holidays This Month</p></div></div>
+                </div>
+
+                <!-- SLA Summary Row -->
+                <div class="row g-3 mb-4" id="sla-summary-row">
+                    <div class="col-12"><h6 class="text-muted fw-semibold text-uppercase" style="letter-spacing:.05em">SLA Overview</h6></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #16a34a"><h3 id="sla-in" style="color:#16a34a">-</h3><p>Within SLA</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #ea580c"><h3 id="sla-risk" style="color:#ea580c">-</h3><p>At Risk</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #dc2626"><h3 id="sla-breach" style="color:#dc2626">-</h3><p>Breached</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #2563eb"><h3 id="sla-resolved-ok" style="color:#2563eb">-</h3><p>Resolved Within SLA</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #7c3aed"><h3 id="sla-avg-response" style="color:#7c3aed;font-size:1.2rem">-</h3><p>Avg Response</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #0891b2"><h3 id="sla-avg-resolution" style="color:#0891b2;font-size:1.2rem">-</h3><p>Avg Resolution</p></div></div>
+                </div>
+
+
+                <div class="row g-2 mb-4 quick-links">
+                    <div class="col-auto"><a href="admin-users.html" class="btn btn-outline-primary btn-sm">User Management</a></div>
+                    <div class="col-auto"><a href="admin-staff.html" class="btn btn-outline-primary btn-sm">Staff Management</a></div>
+                    <div class="col-auto"><a href="admin-holidays.html" class="btn btn-outline-primary btn-sm">Holiday Management</a></div>
+                    <div class="col-auto"><a href="admin-report.html" class="btn btn-outline-primary btn-sm">Reports</a></div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0 text-primary fw-bold">Recent Unassigned Tickets</h5>
+                        <a href="#tickets" class="btn btn-sm btn-primary">View All Tickets</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="unassigned-tickets-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ticket ID</th>
+                                        <th>Customer</th>
+                                        <th>Issue</th>
+                                        <th>Created Date</th>
+                                        <th>Priority</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="unassigned-ticket-list">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">Loading unassigned tickets...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-body py-2">
+                        <h6 class="mb-2">Upcoming Holidays</h6>
+                        <div id="upcoming-holidays" class="small text-muted">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tickets-section" style="display:none">
+                <h4 class="mb-3">Tickets Log</h4>
+                <div class="filter-container">
+                    <input type="text" id="search-ticket" placeholder="Search by Ticket ID" oninput="filterTickets()">
+                    <select id="status-filter" onchange="filterTickets()">
+                        <option value="">All Statuses</option>
+                        <option value="open">Open</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                    <select id="priority-filter" onchange="filterTickets()">
+                        <option value="">All Priorities</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="ticket-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(0)">Ticket ID <span class="sort-icon"></span></th>
+                                <th onclick="sortTable(1)">Customer Name <span class="sort-icon"></span></th>
+                                <th onclick="sortTable(2)">Issue <span class="sort-icon"></span></th>
+                                <th onclick="sortTable(3)">Status <span class="sort-icon"></span></th>
+                                <th onclick="sortTable(4)">Priority <span class="sort-icon"></span></th>
+                                <th onclick="sortTable(5)">Date Created <span class="sort-icon"></span></th>
+                                <th>Assigned To</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticket-list">
+                            <!-- Tickets will load from API -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Toast notification container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/sidebar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('token') || localStorage.getItem('userRole') !== 'admin') {
+            window.location.href = 'index.html';
+        }
+
+        // Inject Sidebar
+        Sidebar.inject('admin', 'admin.html');
+
+        function switchTab() {
+            const hash = window.location.hash;
+            const dashSec = document.getElementById('dashboard-section');
+            const tickSec = document.getElementById('tickets-section');
+            if (hash === '#tickets') {
+                if (dashSec) dashSec.style.display = 'none';
+                if (tickSec) tickSec.style.display = 'block';
+            } else {
+                if (dashSec) dashSec.style.display = 'block';
+                if (tickSec) tickSec.style.display = 'none';
+            }
+        }
+        window.addEventListener('hashchange', switchTab);
+        window.addEventListener('load', switchTab);
+
+        let staffList = [];
+        let currentSortColumn = -1;
+        let sortDirection = 1;
+        let allTickets = [];
+
+        async function loadSummary() {
+            try {
+                const r = await API.getDashboardSummary();
+                if (r && r.summary) {
+                    document.getElementById('stat-users').textContent    = r.summary.totalUsers        || 0;
+                    document.getElementById('stat-staff').textContent    = r.summary.totalStaff        || 0;
+                    document.getElementById('stat-open').textContent     = r.summary.openTickets       || 0;
+                    document.getElementById('stat-holidays').textContent = r.summary.holidaysThisMonth || 0;
+                    const badge = document.getElementById('unassigned-badge');
+                    if (r.summary.unassignedTickets > 0) {
+                        badge.textContent = r.summary.unassignedTickets;
+                        badge.style.display = 'inline';
+                    }
+                }
+                // Load SLA metrics from /api/reports/summary
+                const sr = await API.getReportsSummary();
+                if (sr) {
+                    document.getElementById('sla-in').textContent          = sr.inSla    ?? '-';
+                    document.getElementById('sla-risk').textContent        = sr.atRisk   ?? '-';
+                    document.getElementById('sla-breach').textContent      = sr.breached ?? '-';
+                    document.getElementById('sla-resolved-ok').textContent = sr.resolvedWithinSla ?? '-';
+                    document.getElementById('sla-avg-response').textContent   = fmtMinutes(sr.avgResponseMinutes);
+                    document.getElementById('sla-avg-resolution').textContent = fmtMinutes(sr.avgResolutionMinutes);
+                }
+            } catch (e) { console.error('loadSummary error:', e); }
+        }
+
+        function fmtMinutes(m) {
+            if (m === null || m === undefined) return 'N/A';
+            const h = Math.floor(m / 60), min = m % 60;
+            if (h === 0) return min + 'm';
+            return h + 'h ' + min + 'm';
+        }
+
+
+        async function loadStaffDropdown() {
+            const r = await API.getStaffList();
+            // getStaffList() always returns { success, staff:[...] }
+            staffList = (r.staff || []).filter(s => s.availability === 'available');
+        }
+
+        async function loadUpcomingHolidays() {
+            const r = await API.getHolidaysPublic();
+            // getHolidaysPublic() returns { success:true, holidays:[...] } after normalization
+            const now = new Date();
+            const upcoming = (r.holidays || []).filter(h => new Date(h.date) >= now).slice(0, 3);
+            document.getElementById('upcoming-holidays').innerHTML = upcoming.length
+                ? upcoming.map(h => `<span class="badge bg-warning text-dark me-1">${new Date(h.date).toLocaleDateString()} – ${h.name}</span>`).join('')
+                : 'No upcoming holidays';
+        }
+        
+        // Load tickets on page load
+        async function loadTickets() {
+            try {
+                document.getElementById('ticket-list').innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <div class="spinner-container">
+                                <div class="loading-spinner"></div>
+                            </div>
+                        </td>
+                    </tr>`;
+                await loadStaffDropdown();
+                const result = await API.getTickets();
+                if (result.success) {
+                    allTickets = result.tickets || [];
+                    if (allTickets.length === 0) {
+                        document.getElementById('ticket-list').innerHTML = `
+                            <tr>
+                                <td colspan="9" class="text-center py-5 text-muted">
+                                    <div class="empty-state">
+                                        <span class="empty-state-icon">🎫</span>
+                                        <h5>No Tickets Found</h5>
+                                        <p>There are no support tickets in the system yet.</p>
+                                    </div>
+                                </td>
+                            </tr>`;
+                    } else {
+                        renderTickets(allTickets);
+                        renderUnassignedTickets(allTickets);
+                    }
+                } else {
+                    showToast(result.message || 'Failed to load tickets', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to load tickets:', error);
+                showToast('Failed to load tickets', 'error');
+            }
+        }
+
+        function renderUnassignedTickets(tickets) {
+            const tbody = document.getElementById('unassigned-ticket-list');
+            if (!tbody) return;
+            
+            const unassigned = tickets.filter(t => !t.assignedTo);
+            
+            if (unassigned.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            No unassigned tickets
+                        </td>
+                    </tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            const sorted = [...unassigned].sort((a, b) => b.id - a.id).slice(0, 5);
+            
+            sorted.forEach(ticket => {
+                const priorityClass = `priority-${ticket.priority.toLowerCase()}`;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>#${ticket.id}</td>
+                    <td>${ticket.customerName || 'N/A'}</td>
+                    <td>${ticket.title}</td>
+                    <td>${new Date(ticket.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                    <td class="${priorityClass}">${ticket.priority}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary py-0" onclick="viewAndAssignTicket('${ticket.id}')">Assign</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function viewAndAssignTicket(id) {
+            window.location.hash = '#tickets';
+            const search = document.getElementById('search-ticket');
+            if (search) {
+                search.value = id;
+                filterTickets();
+            }
+        }
+
+        function staffOptions() {
+            return staffList.map(s => `<option value="${s.userId}">${s.name} (${s.department || s.category || 'Staff'})</option>`).join('');
+        }
+
+        // Render tickets in table
+        function renderTickets(tickets) {
+            const tbody = document.getElementById('ticket-list');
+            tbody.innerHTML = '';
+            
+            tickets.forEach(ticket => {
+                const statusClass = ticket.status.toLowerCase().replace(' ', '-');
+                const priorityClass = `priority-${ticket.priority.toLowerCase()}`;
+                
+                const row = document.createElement('tr');
+                row.setAttribute('data-status', ticket.status.toLowerCase().replace(' ', '-'));
+                row.setAttribute('data-priority', ticket.priority.toLowerCase());
+                row.setAttribute('data-date', ticket.createdAt || new Date().toISOString().split('T')[0]);
+                
+                row.innerHTML = `
+                    <td>#${ticket.id}</td>
+                    <td>${ticket.customerName || 'N/A'}</td>
+                    <td>${ticket.title}</td>
+                    <td><span class="ticket-status status-${statusClass}">${ticket.status}</span></td>
+                    <td class="${priorityClass}">${ticket.priority}</td>
+                    <td>${new Date(ticket.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                    <td>
+                        ${ticket.assignedTo ? ticket.assignedTo : `
+                            <select class="staff-dropdown" data-ticket-id="${ticket._id || ticket.id}">
+                                <option value="">Select Staff</option>
+                                ${staffOptions()}
+                            </select>
+                        `}
+                    </td>
+                    <td>
+                        ${ticket.assignedTo ? 'Assigned' : `<button class="assign-btn" onclick="assignPerson(this, '${ticket._id || ticket.id}')">Assign</button>`}
+                    </td>
+                    <td><button class="view-details-btn" onclick="viewTicketDetails('${ticket.id}')">View Details</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function logout() {
+            if (confirm("Are you sure you want to logout?")) {
+                localStorage.clear();
+                window.location.href = "index.html";
+            }
+        }
+
+        async function assignPerson(button, ticketId) {
+            const row = button.closest('tr');
+            const staffSelect = row.querySelector('.staff-dropdown');
+            const staffId = staffSelect.value;
+            
+            if (!staffId) {
+                showToast("Please select a staff member", "error");
+                return;
+            }
+            
+            try {
+                const result = await API.assignTicketById(ticketId, staffId);
+                if (result.success) {
+                    // result is the Ticket entity directly (flat), not wrapped in result.ticket
+                    showToast(`Ticket assigned to ${result.assignedTo || 'staff'}`, "success");
+                    loadTickets();
+                    loadSummary();
+                } else showToast(result.message || "Assignment failed", "error");
+            } catch (error) {
+                showToast("Assignment failed", "error");
+            }
+        }
+
+        function filterTickets() {
+            const searchInput = document.getElementById('search-ticket').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+            const priorityFilter = document.getElementById('priority-filter').value;
+
+            const filtered = allTickets.filter(ticket => {
+                const matchesSearch = ticket.id.toString().includes(searchInput) || 
+                                      ticket.title.toLowerCase().includes(searchInput);
+                const matchesStatus = !statusFilter || ticket.status.toLowerCase().replace(' ', '-') === statusFilter;
+                const matchesPriority = !priorityFilter || ticket.priority.toLowerCase() === priorityFilter;
+                
+                return matchesSearch && matchesStatus && matchesPriority;
+            });
+            
+            renderTickets(filtered);
+        }
+
+        function sortTable(columnIndex) {
+            if (columnIndex === currentSortColumn) {
+                sortDirection *= -1;
+            } else {
+                currentSortColumn = columnIndex;
+                sortDirection = 1;
+            }
+            
+            document.querySelectorAll('th .sort-icon').forEach(icon => icon.textContent = '');
+            document.querySelectorAll('th')[columnIndex].querySelector('.sort-icon').textContent = sortDirection === 1 ? '▲' : '▼';
+            
+            const tbody = document.getElementById('ticket-list');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            rows.sort((a, b) => {
+                let valueA, valueB;
+                
+                if (columnIndex === 5) {
+                    valueA = new Date(a.getAttribute('data-date'));
+                    valueB = new Date(b.getAttribute('data-date'));
+                } else {
+                    valueA = a.querySelector(`td:nth-child(${columnIndex + 1})`).textContent.trim();
+                    valueB = b.querySelector(`td:nth-child(${columnIndex + 1})`).textContent.trim();
+                }
+                
+                if (valueA < valueB) return -1 * sortDirection;
+                if (valueA > valueB) return 1 * sortDirection;
+                return 0;
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+        }
+        
+        function viewTicketDetails(ticketId) {
+            window.location.href = `ticket-details.html?id=${ticketId}`;
+        }
+        
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.backgroundColor = type === 'success' ? '#4caf50' : '#f44336';
+            toast.textContent = message;
+            
+            toastContainer.appendChild(toast);
+            toast.offsetHeight;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toastContainer.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        // Load tickets when page loads
+        loadSummary();
+        loadUpcomingHolidays();
+        loadTickets();
+    </script>
+</body>
+</html>
