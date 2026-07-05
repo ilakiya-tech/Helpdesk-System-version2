@@ -90,6 +90,9 @@ public class UserController {
                     existing.setAvailability(updated.getAvailability());
                     existing.setDesignation(updated.getDesignation());
                     existing.setSpecialization(updated.getSpecialization());
+                    if (updated.getEnabled() != null) {
+                        existing.setEnabled(updated.getEnabled());
+                    }
                     if (updated.getRole() != null) {
                         existing.setRole(updated.getRole());
                     }

@@ -11,3 +11,6 @@ ALTER TABLE comments ADD COLUMN IF NOT EXISTS author_role VARCHAR(100);
 
 -- Track ticket creator username securely
 ALTER TABLE tickets ADD COLUMN IF NOT EXISTS created_by_name VARCHAR(255);
+
+-- Enable user active/disabled status
+ALTER TABLE users ADD COLUMN IF NOT EXISTS enabled BOOLEAN DEFAULT TRUE;

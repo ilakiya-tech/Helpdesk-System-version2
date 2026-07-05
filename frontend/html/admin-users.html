@@ -133,22 +133,32 @@ async function loadUsers() {
         return;
     }
     allUsers = r.users || [];
-    tbody.innerHTML = allUsers.filter(u => u.role !== 'admin').map(u => `
+    tbody.innerHTML = allUsers.filter(u => u.role !== 'admin').map(u => {
+        const isEnabled = (u.enabled !== false);
+        const statusBadge = isEnabled
+            ? `<span class="badge bg-success" style="background-color:rgba(22,101,52,0.05) !important; color:#166534 !important; border:1px solid rgba(22,101,52,0.12) !important; font-size:0.75rem;">Active</span>`
+            : `<span class="badge bg-danger" style="background-color:rgba(239,68,68,0.05) !important; color:#ef4444 !important; border:1px solid rgba(239,68,68,0.12) !important; font-size:0.75rem;">Disabled</span>`;
+        const toggleBtn = isEnabled
+            ? `<button class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus('${u.id}', false)">Disable</button>`
+            : `<button class="btn btn-sm btn-outline-success" onclick="toggleUserStatus('${u.id}', true)">Enable</button>`;
+        return `
         <tr>
             <td>${u.name || '-'}</td>
             <td>${u.username}</td>
             <td>${UI.roleBadge(u.role)}</td>
             <td>${u.email || '-'}</td>
             <td>${u.mobile || '-'}</td>
-            <td><span class="badge bg-success" style="background-color:rgba(22,101,52,0.05) !important; color:#166534 !important; border:1px solid rgba(22,101,52,0.12) !important; font-size:0.75rem;">Active</span></td>
+            <td>${statusBadge}</td>
             <td>
                 <div class="d-flex gap-2">
                     <button class="btn btn-sm btn-outline-primary" style="background:transparent !important; color:var(--primary-color) !important" onclick="startEdit('${u.id}')">Edit</button>
                     <button class="btn btn-sm btn-outline-secondary" onclick="resetPw('${u.id}', this)">Reset PW</button>
+                    ${toggleBtn}
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${u.id}', this)">Delete</button>
                 </div>
             </td>
-        </tr>`).join('');
+        </tr>`;
+    }).join('');
 }
 
 function startEdit(id) {
@@ -200,6 +210,24 @@ async function deleteUser(id) {
             loadUsers();
         } else {
             UI.toast('error', 'Error', r.message || 'Failed to delete user');
+        }
+    });
+}
+
+async function toggleUserStatus(id, enable) {
+    const user = allUsers.find(u => String(u.id) === String(id));
+    if (!user) return;
+    await UI.blockDuplicate('toggle-' + id, async () => {
+        const payload = {
+            ...user,
+            enabled: enable
+        };
+        const r = await API.updateUser(id, payload);
+        if (r.success || r.id) {
+            UI.toast('success', 'Success', `User account ${enable ? 'enabled' : 'disabled'} successfully!`);
+            loadUsers();
+        } else {
+            UI.toast('error', 'Error', r.message || 'Failed to update status');
         }
     });
 }

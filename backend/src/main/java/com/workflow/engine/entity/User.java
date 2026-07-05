@@ -50,6 +50,8 @@ public class User {
 
     private String specialization;
 
+    private Boolean enabled = true;
+
     public User() {
     }
 
@@ -173,5 +175,13 @@ public class User {
 
     public void setSpecialization(String specialization) {
         this.specialization = specialization;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
     }
 }
