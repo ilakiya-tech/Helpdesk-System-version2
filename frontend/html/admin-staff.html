@@ -71,7 +71,7 @@ let allStaff = [], allTickets = [];
 
 async function loadStaff() {
     const tableBody = document.getElementById('staff-table');
-    UI.skeleton(tableBody.parentElement, 5, 7);
+    UI.skeleton(tableBody, 5, 7);
     const [sr, tr] = await Promise.all([API.getStaffList(), API.getTickets()]);
     allStaff = sr.staff || [];
     allTickets = tr.tickets || [];

@@ -100,7 +100,7 @@ let allUsers = [];
 
 async function loadUsers() {
     const tbody = document.getElementById('users-table');
-    UI.skeleton(tbody.parentElement, 5, 7);
+    UI.skeleton(tbody, 5, 7);
     const r = await API.getUsers();
     if (!r.success) {
         tbody.innerHTML = `

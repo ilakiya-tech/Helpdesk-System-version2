@@ -209,7 +209,7 @@
 
     async function loadReport() {
         const tbody = document.getElementById('ticket-report-body');
-        UI.skeleton(tbody.parentElement, 5, 8);
+        UI.skeleton(tbody, 5, 8);
         try {
             const [sr, tr] = await Promise.all([
                 API.getReportsSummary(),

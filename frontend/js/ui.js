@@ -138,15 +138,17 @@ window.UI = (() => {
   // ── Skeleton Loader ────────────────────────────────────────────────────────
   function skeleton(container, rows = 5, cols = 4) {
     if (!container) return;
-    let html = '<table style="width:100%;border-collapse:collapse">';
+    const isTbody = container.tagName && container.tagName.toLowerCase() === 'tbody';
+    let html = '';
+    if (!isTbody) html += '<table style="width:100%;border-collapse:collapse">';
     for (let r = 0; r < rows; r++) {
       html += '<tr>';
       for (let c = 0; c < cols; c++) {
-        html += `<td style="padding:14px 12px"><div class="skeleton-cell" style="width:${60+Math.random()*30|0}%"></div></td>`;
+        html += `<td style="padding:10px 14px"><div class="skeleton-cell" style="width:${60+Math.random()*30|0}%"></div></td>`;
       }
       html += '</tr>';
     }
-    html += '</table>';
+    if (!isTbody) html += '</table>';
     container.innerHTML = html;
   }
 

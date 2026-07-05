@@ -104,7 +104,7 @@ let holidays = [], calDate = new Date();
 
 async function loadHolidays() {
     const holidaysTable = document.getElementById('holidays-table');
-    UI.skeleton(holidaysTable.parentElement, 5, 4);
+    UI.skeleton(holidaysTable, 5, 4);
     const r = await API.getHolidaysPublic();
     holidays = r.holidays || [];
     if (holidays.length === 0) {

@@ -2,27 +2,30 @@
 
 const Sidebar = {
   adminLinks: [
-    { href: 'admin.html', label: 'Dashboard', icon: '📊' },
-    { href: 'admin-users.html', label: 'Users', icon: '👥' },
-    { href: 'admin-staff.html', label: 'Staff', icon: '🛠️' },
-    { href: 'admin.html#tickets', label: 'Tickets', icon: '🎫' },
-    { href: 'admin-holidays.html', label: 'Holidays', icon: '📅' },
-    { href: 'admin-report.html', label: 'Reports', icon: '📈' },
+    { href: 'admin.html', label: 'Dashboard' },
+    { href: 'admin-users.html', label: 'Users' },
+    { href: 'admin-staff.html', label: 'Staff' },
+    { href: 'admin.html#tickets', label: 'Tickets' },
+    { href: 'admin-holidays.html', label: 'Holidays' },
+    { href: 'admin-report.html', label: 'Reports' },
   ],
-  staffLinks: [
-    { href: 'staff.html', label: 'Assigned Tickets', icon: '🎫' },
-    { href: 'staff.html#availability', label: 'Leave Status', icon: '🏖️' },
-  ],
-  clientLinks: [
-    { href: 'client.html', label: 'My Tickets', icon: '🎫' },
-    { href: 'client.html#raise', label: 'Raise Ticket', icon: '➕' },
-  ],
+  staffLinks: [],
+  clientLinks: [],
 
   render(role, activePage) {
     const links = role === 'admin' ? this.adminLinks
       : role === 'staff' ? this.staffLinks : this.clientLinks;
     const roleLabel = role === 'admin' ? 'Admin' : role === 'staff' ? 'Staff' : 'Consumer';
     const username = localStorage.getItem('username') || '';
+
+    const navHtml = links.length ? `
+      <nav class="sidebar-nav">
+        ${links.map(l => {
+          return `<a href="${l.href}" class="sidebar-link d-flex align-items-center gap-2">
+            <span>${l.label}</span>
+          </a>`;
+        }).join('')}
+      </nav>` : '';
 
     return `
       <div class="sidebar text-white d-flex flex-row align-items-center justify-content-between" id="app-sidebar">
@@ -35,13 +38,7 @@ const Sidebar = {
             </div>
           </div>
         </div>
-        <nav class="sidebar-nav">
-          ${links.map(l => {
-            return `<a href="${l.href}" class="sidebar-link d-flex align-items-center gap-2">
-              <span>${l.icon}</span><span>${l.label}</span>
-            </a>`;
-          }).join('')}
-        </nav>
+        ${navHtml}
         <div class="sidebar-footer">
           <small class="opacity-75 text-white d-none d-sm-inline">User: <strong>${username}</strong></small>
           <button class="btn btn-outline-light btn-sm" style="padding: 4px 10px !important; font-size: 0.75rem !important; background: transparent !important; color: #fff !important; border-color: #fff !important;" onclick="logout()">Logout</button>

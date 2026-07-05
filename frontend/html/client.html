@@ -94,10 +94,31 @@
             </div>
             <div class="modal-body p-4">
                 <form id="modal-ticket-form" novalidate>
-                    <!-- Hidden fields supplied from localStorage context -->
-                    <input type="hidden" id="modal-customer-name" name="customerName">
-                    <input type="hidden" id="modal-email" name="email">
-                    <input type="hidden" id="modal-mobile" name="mobile">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="modal-email" class="form-label required">Email ID</label>
+                            <input type="email" class="form-control" id="modal-email" name="email" required placeholder="e.g. customer@carbochem.com" />
+                            <div class="error-message" id="modal-email-error" style="display:none; color:#ef4444; font-size:0.8rem; margin-top:4px;">Please enter a valid email address</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="modal-mobile" class="form-label required">Phone Number</label>
+                            <input type="tel" class="form-control" id="modal-mobile" name="mobile" required placeholder="e.g. 9876543210" />
+                            <div class="error-message" id="modal-mobile-error" style="display:none; color:#ef4444; font-size:0.8rem; margin-top:4px;">Please enter a valid 10-digit phone number</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="modal-customer-name" class="form-label required">Name</label>
+                            <input type="text" class="form-control" id="modal-customer-name" name="customerName" required placeholder="Enter full name" />
+                            <div class="error-message" id="modal-name-error" style="display:none; color:#ef4444; font-size:0.8rem; margin-top:4px;">Please enter your name</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="modal-address" class="form-label required">Address</label>
+                            <input type="text" class="form-control" id="modal-address" name="address" required placeholder="Enter physical/billing address" />
+                            <div class="error-message" id="modal-address-error" style="display:none; color:#ef4444; font-size:0.8rem; margin-top:4px;">Please enter your address</div>
+                        </div>
+                    </div>
 
                     <div class="mb-3">
                         <label for="modal-issue-title" class="form-label required">Issue Title</label>
@@ -135,6 +156,11 @@
                             </select>
                             <div class="error-message" id="modal-priority-error" style="display:none; color:#ef4444; font-size:0.8rem; margin-top:4px;">Please select a priority level</div>
                         </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modal-attachment" class="form-label">Attach Files and Photos</label>
+                        <input type="file" class="form-control" id="modal-attachment" accept="image/*,application/pdf" style="background-color:#fff !important;">
                     </div>
 
                     <div class="mt-4 d-flex justify-content-end gap-2">
@@ -190,7 +216,7 @@ async function loadTickets() {
                     <span class="empty-state-icon">🎫</span>
                     <h5>No Tickets Found</h5>
                     <p>You have not raised any support tickets yet.</p>
-                    <button class="btn btn-primary mt-2" onclick="location.hash='#raise'">Raise Ticket</button>
+                    <button class="btn btn-primary mt-2" onclick="location.hash='#raise'">➕ Raise Ticket</button>
                 </div>`;
         } else {
             filterTickets();
@@ -207,7 +233,7 @@ async function loadHolidayNotice() {
     const upcoming = (r.holidays || []).filter(h => new Date(h.date) >= now).slice(0, 1);
     const noticeEl = document.getElementById('holiday-notice');
     if (upcoming.length) {
-        noticeEl.innerHTML = `📅 <strong>Upcoming holiday:</strong> ${upcoming[0].name} (${new Date(upcoming[0].date).toLocaleDateString()})`;
+        noticeEl.innerHTML = `📅 Upcoming holiday: <strong>${upcoming[0].name}</strong> (${new Date(upcoming[0].date).toLocaleDateString()})`;
         noticeEl.style.display = 'block';
     } else {
         noticeEl.style.display = 'none';
@@ -295,8 +321,8 @@ document.getElementById('priorityFilter').addEventListener('change', filterTicke
 
 function checkHash() {
     if (window.location.hash === '#raise' || new URLSearchParams(window.location.search).get('raise') === 'true') {
-        document.getElementById('modal-customer-name').value = localStorage.getItem('name') || localStorage.getItem('username') || 'Consumer';
-        document.getElementById('modal-email').value = localStorage.getItem('email') || (localStorage.getItem('username') + '@carbochem.com');
+        document.getElementById('modal-customer-name').value = localStorage.getItem('name') || localStorage.getItem('username') || '';
+        document.getElementById('modal-email').value = localStorage.getItem('email') || '';
         document.getElementById('modal-mobile').value = localStorage.getItem('mobile') || '';
         raiseModal.show();
         history.replaceState(null, '', 'client.html');
@@ -305,20 +331,36 @@ function checkHash() {
 window.addEventListener('hashchange', checkHash);
 window.addEventListener('load', checkHash);
 
+// Helper to read file as base64
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+    });
+}
+
 // Handle Modal Submission
 document.getElementById('modal-ticket-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const customerName = document.getElementById('modal-customer-name').value;
+    const email = document.getElementById('modal-email').value;
+    const mobile = document.getElementById('modal-mobile').value;
+    const address = document.getElementById('modal-address').value;
     const issueTitle = document.getElementById('modal-issue-title').value;
     const description = document.getElementById('modal-description').value;
     const category = document.getElementById('modal-category').value;
     const priority = document.getElementById('modal-priority').value;
-    const email = document.getElementById('modal-email').value;
-    const mobile = document.getElementById('modal-mobile').value;
+    const fileInput = document.getElementById('modal-attachment');
 
     let isValid = true;
     document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
 
+    if (!email.trim() || !UI.validateEmail(email)) { document.getElementById('modal-email-error').style.display = 'block'; isValid = false; }
+    if (!mobile.trim() || !UI.validatePhone(mobile)) { document.getElementById('modal-mobile-error').style.display = 'block'; isValid = false; }
+    if (!customerName.trim()) { document.getElementById('modal-name-error').style.display = 'block'; isValid = false; }
+    if (!address.trim()) { document.getElementById('modal-address-error').style.display = 'block'; isValid = false; }
     if (!issueTitle.trim()) { document.getElementById('modal-title-error').style.display = 'block'; isValid = false; }
     if (!description.trim()) { document.getElementById('modal-description-error').style.display = 'block'; isValid = false; }
     if (!category) { document.getElementById('modal-category-error').style.display = 'block'; isValid = false; }
@@ -329,7 +371,28 @@ document.getElementById('modal-ticket-form').addEventListener('submit', async fu
         await UI.blockDuplicate('raise-ticket-modal', async () => {
             UI.setLoading(btn, true, 'Submitting…');
             try {
-                const r = await API.createTicket(issueTitle, description, priority, category, customerName, email, mobile);
+                let fileDataUrl = '';
+                let fileName = '';
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    fileName = file.name;
+                    fileDataUrl = await readFileAsDataUrl(file);
+                }
+
+                // Construct full description payload appending address and file attachment
+                let fullDescription = description;
+                if (address.trim()) {
+                    fullDescription = `Address: ${address}\n\n${fullDescription}`;
+                }
+                if (fileDataUrl) {
+                    if (fileDataUrl.startsWith('data:image/')) {
+                        fullDescription += `\n\n<div class="mt-2 p-2 border rounded bg-light" style="max-width:300px"><div class="fw-semibold text-primary mb-1">Attached Photo:</div><a href="${fileDataUrl}" target="_blank" download="${fileName}"><img src="${fileDataUrl}" style="max-width:100%; max-height:200px; border-radius:4px; border:1px solid #cbd5e1;"/></a></div>`;
+                    } else {
+                        fullDescription += `\n\n<div class="mt-2 p-2 border rounded bg-light"><div class="fw-semibold text-primary mb-1">Attached File:</div><a href="${fileDataUrl}" class="btn btn-sm btn-outline-primary" style="background:transparent !important; color:var(--primary-color) !important" download="${fileName}">Download ${fileName}</a></div>`;
+                    }
+                }
+
+                const r = await API.createTicket(issueTitle, fullDescription, priority, category, customerName, email, mobile);
                 UI.setLoading(btn, false);
                 if (r.success) {
                     UI.toast('success', 'Ticket Created', 'Ticket raised successfully');
@@ -340,6 +403,7 @@ document.getElementById('modal-ticket-form').addEventListener('submit', async fu
                     UI.toast('error', 'Error', r.message || 'Submission failed');
                 }
             } catch(err) {
+                console.error(err);
                 UI.toast('error', 'Error', 'Submission failed');
                 UI.setLoading(btn, false);
             }

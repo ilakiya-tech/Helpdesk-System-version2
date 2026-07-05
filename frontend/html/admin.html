@@ -231,7 +231,7 @@
         async function loadTickets() {
             try {
                 const tbody = document.getElementById('ticket-list');
-                UI.skeleton(tbody.parentElement, 5, 9);
+                UI.skeleton(tbody, 5, 9);
                 await loadStaffDropdown();
                 const result = await API.getTickets();
                 if (result.success) {
