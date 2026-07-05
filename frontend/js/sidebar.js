@@ -50,12 +50,6 @@ const Sidebar = {
   },
 
   inject(role, activePage, targetId = 'sidebar-container') {
-    // Accept backend role "consumer" as sidebar role "client"
-    if (typeof getSidebarRole === 'function') {
-      role = getSidebarRole(role);
-    } else if (role === 'consumer') {
-      role = 'client';
-    }
     const el = document.getElementById(targetId);
     if (el) {
       el.innerHTML = this.render(role, activePage);

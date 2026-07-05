@@ -11,20 +11,22 @@
   <style>
     :root { --primary-color: #1F3373; --background-light: #f0f4f8; }
     body { font-family: 'Inter', sans-serif; background: var(--background-light); margin: 0; }
-    .detail-card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1rem; }
-    .timeline-item { border-left: 3px solid var(--primary-color); padding-left: 1rem; margin-bottom: 1rem; }
-    .comment-box { background: #f8fafc; border-radius: 8px; padding: 0.75rem; margin-bottom: 0.5rem; }
+    .detail-card { background: #fff; border-radius: 12px; padding: 1.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; margin-bottom: 1.25rem; }
+    .timeline-item { border-left: 3px solid var(--primary-color); padding-left: 1rem; margin-bottom: 1.25rem; position: relative; }
+    .comment-box { background: #f8fafc; border-radius: 10px; padding: 1rem; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-dark" style="background: var(--primary-color);">
+  <nav class="navbar navbar-dark" style="background: var(--primary-color); padding: 0.75rem 1.5rem;">
     <div class="container-fluid">
-      <span class="navbar-brand mb-0 h1">🎫 Ticket Details</span>
-      <a href="#" class="btn btn-outline-light btn-sm" id="back-btn">← Back</a>
+      <span class="navbar-brand mb-0 h1 fw-bold">🎫 Ticket Details</span>
+      <a href="#" class="btn btn-outline-light btn-sm" style="background:transparent !important; color:#fff !important; border-color:#fff !important" id="back-btn">← Back</a>
     </div>
   </nav>
   <div class="container py-4">
-    <div id="loading" class="text-center py-5">Loading ticket details...</div>
+    <div id="loading" class="text-center py-5">
+      <div class="spinner-container"><div class="loading-spinner"></div></div>
+    </div>
     <div id="error-message" class="alert alert-danger d-none"></div>
     <div id="content" class="d-none">
       <div id="holiday-warning" class="alert alert-warning d-none">⚠️ Ticket deadline falls on a holiday!</div>
@@ -32,20 +34,20 @@
         <div class="col-lg-7">
           <div class="detail-card">
             <div class="row g-3" id="ticket-fields"></div>
-            <div class="mt-3" id="status-actions"></div>
+            <div class="mt-4" id="status-actions"></div>
           </div>
           <div class="detail-card">
-            <h5>Comments & Notes</h5>
+            <h5 class="fw-bold mb-3">Comments & Notes</h5>
             <div id="comments-list"></div>
             <form id="comment-form" class="mt-3">
-              <textarea class="form-control mb-2" id="comment-text" rows="2" placeholder="Add a note..." required></textarea>
-              <button type="submit" class="btn btn-primary btn-sm">Add Comment</button>
+              <textarea class="form-control mb-3" id="comment-text" rows="2" placeholder="Add a note..." required></textarea>
+              <button type="submit" class="btn btn-primary btn-sm comment-submit-btn">Add Comment</button>
             </form>
           </div>
         </div>
         <div class="col-lg-5">
           <div class="detail-card">
-            <h5>Audit Trail</h5>
+            <h5 class="fw-bold mb-3">Audit Trail</h5>
             <div id="history-list"></div>
           </div>
         </div>
@@ -53,11 +55,12 @@
     </div>
   </div>
   <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
   <script src="../js/auth.js"></script>
   <script>
-    if (!localStorage.getItem('token')) window.location.href = 'index.html';
-    const userRole = localStorage.getItem('userRole');
-    const backUrls = { admin: 'admin.html', staff: 'staff.html', client: 'client.html' };
+    if (!requireAuth()) throw new Error('auth');
+    const userRole = normalizeRole(localStorage.getItem('userRole'));
+    const backUrls = { admin: 'admin.html', staff: 'staff.html', consumer: 'client.html' };
     document.getElementById('back-btn').href = backUrls[userRole] || 'index.html';
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -87,11 +90,11 @@
     function renderTicket(t) {
       const estDays = priorityDays[t.priority] || 3;
 
-      // SLA badge color
+      // SLA badge
       const slaColors = { 'IN SLA': '#16a34a', 'AT RISK': '#ea580c', 'BREACHED': '#dc2626' };
       const slaColor = slaColors[t.slaStatus] || '#6b7280';
       const slaBadge = t.slaStatus
-        ? `<span style="background:${slaColor};color:#fff;padding:2px 10px;border-radius:12px;font-size:.8rem;font-weight:600">${t.slaStatus}</span>`
+        ? `<span style="background:${slaColor};color:#fff;padding:3px 12px;border-radius:20px;font-size:.75rem;font-weight:600">${t.slaStatus}</span>`
         : '<span class="text-muted">N/A</span>';
 
       // Remaining time
@@ -114,15 +117,15 @@
         ['Title', t.title],
         ['Description', t.description],
         ['Category', t.category],
-        ['Priority', t.priority + (userRole === 'client' ? ` <small class="text-muted">(Est. ${estDays} day${estDays>1?'s':''} resolution)</small>` : '')],
-        ['Status', `<span class="badge bg-primary">${t.status}</span>`],
+        ['Priority', t.priority + (userRole === 'consumer' ? ` <small class="text-muted">(Est. ${estDays} day${estDays>1?'s':''} resolution)</small>` : '')],
+        ['Status', UI.statusBadge(t.status)],
         ['Raised By', t.createdByName || t.createdBy || t.customerName],
         ['Assigned To', t.assignedTo || 'Unassigned'],
         ['Date Created', fmt(t.createdAt)],
         ['Date Assigned', t.assignedAt ? fmt(t.assignedAt) : 'Not yet assigned'],
         ['Last Updated', fmt(t.updatedAt || t.createdAt)],
         ['Due Date', t.dueDate ? fmt(t.dueDate) : 'N/A'],
-        // ── SLA Fields ──────────────────────────────────────────────
+        // SLA Fields
         ['SLA Status', slaBadge],
         ['Remaining Time', remainingHtml],
         ['Response Deadline', t.responseSlaDeadline ? fmt(t.responseSlaDeadline) : 'N/A'],
@@ -131,16 +134,15 @@
         ['Resolved At', t.resolvedAt ? fmt(t.resolvedAt) : 'Not yet resolved']
       ];
       document.getElementById('ticket-fields').innerHTML = fields.map(([l,v]) =>
-        `<div class="col-md-6"><label class="form-label text-muted small fw-semibold">${l}</label><div>${v}</div></div>`).join('');
-
+        `<div class="col-md-6 mb-3"><label class="form-label text-muted small fw-semibold mb-1">${l}</label><div style="font-size:0.95rem">${v}</div></div>`).join('');
 
       const actions = document.getElementById('status-actions');
       if (userRole === 'staff' || userRole === 'admin') {
         const statuses = ['Open','In Progress','Resolved','Closed'];
         const cur = statuses.indexOf(t.status);
         const next = statuses.slice(Math.max(0, cur)).filter(s => s !== t.status);
-        actions.innerHTML = next.length ? `<label class="form-label">Update Status</label>
-          <div class="d-flex gap-2 flex-wrap">${next.map(s => `<button class="btn btn-outline-primary btn-sm" onclick="updateStatus('${s}')">${s}</button>`).join('')}</div>` : '';
+        actions.innerHTML = next.length ? `<label class="form-label fw-semibold small text-muted mb-2">Update Status</label>
+          <div class="d-flex gap-2 flex-wrap">${next.map(s => `<button class="btn btn-outline-primary btn-sm status-action-btn" data-status="${s}" onclick="updateStatus('${s}', this)">${s}</button>`).join('')}</div>` : '';
       } else actions.innerHTML = '';
     }
 
@@ -149,9 +151,9 @@
       if (!history.length) { el.innerHTML = '<p class="text-muted small">No history yet</p>'; return; }
       el.innerHTML = history.map(h => `
         <div class="timeline-item">
-          <strong>${h.changedByName || 'System'}</strong> – ${h.action.replace(/_/g,' ')}
-          ${h.field ? `<br><small>${h.field}: ${h.oldValue || ''} → ${h.newValue || ''}</small>` : ''}
-          <br><small class="text-muted">${fmt(h.createdAt)}</small>
+          <strong style="font-size:0.9rem">${h.changedByName || 'System'}</strong> – <span class="small">${h.action.replace(/_/g,' ')}</span>
+          ${h.field ? `<br><small class="text-muted">${h.field}: ${h.oldValue || ''} → ${h.newValue || ''}</small>` : ''}
+          <br><small class="text-muted" style="font-size:0.75rem">${fmt(h.createdAt)}</small>
         </div>`).join('');
     }
 
@@ -159,7 +161,7 @@
       const el = document.getElementById('comments-list');
       if (!comments.length) { el.innerHTML = '<p class="text-muted small">No comments yet</p>'; return; }
       el.innerHTML = comments.map(c => `
-        <div class="comment-box"><strong>${c.authorName || 'User'}</strong> <small class="text-muted">${fmt(c.createdAt)}</small><br>${c.text}</div>`).join('');
+        <div class="comment-box"><strong>${c.authorName || 'User'}</strong> <small class="text-muted ms-2">${fmt(c.createdAt)}</small><br><div class="mt-1" style="font-size:0.92rem">${c.text}</div></div>`).join('');
     }
 
     function checkHolidayWarning(ticket, holidays) {
@@ -170,18 +172,43 @@
       }
     }
 
-    async function updateStatus(status) {
-      const r = await API.updateTicketStatus(currentTicket._id || ticketId, status);
-      if (r.success) { currentTicket = r.ticket || r; loadAll(); }
-      else alert(r.message);
+    async function updateStatus(status, btn) {
+      const buttons = document.querySelectorAll('.status-action-btn');
+      await UI.blockDuplicate('update-status', async () => {
+        buttons.forEach(b => b.disabled = true);
+        if (btn) UI.setLoading(btn, true, 'Updating…');
+        const r = await API.updateTicketStatus(currentTicket._id || ticketId, status);
+        if (r.success) {
+          UI.toast('success', 'Success', `Ticket moved to ${status}`);
+          currentTicket = r.ticket || r;
+          loadAll();
+        } else {
+          UI.toast('error', 'Update Failed', r.message || 'Could not update status');
+          buttons.forEach(b => b.disabled = false);
+          if (btn) UI.setLoading(btn, false);
+        }
+      });
     }
 
     document.getElementById('comment-form').addEventListener('submit', async e => {
       e.preventDefault();
-      const text = document.getElementById('comment-text').value;
-      const r = await API.addComment(currentTicket._id || ticketId, text);
-      if (r.success) { document.getElementById('comment-text').value = ''; loadAll(); }
-      else alert(r.message);
+      const textEl = document.getElementById('comment-text');
+      const text = textEl.value.trim();
+      if (!text) return;
+      const btn = e.target.querySelector('.comment-submit-btn');
+
+      await UI.blockDuplicate('add-comment', async () => {
+        UI.setLoading(btn, true, 'Sending…');
+        const r = await API.addComment(currentTicket._id || ticketId, text);
+        UI.setLoading(btn, false);
+        if (r.success) {
+          textEl.value = '';
+          UI.toast('success', 'Success', 'Comment added successfully');
+          loadAll();
+        } else {
+          UI.toast('error', 'Comment Failed', r.message || 'Could not add comment');
+        }
+      });
     });
 
     function fmt(d) { return d ? new Date(d).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'; }

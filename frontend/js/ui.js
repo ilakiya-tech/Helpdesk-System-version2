@@ -18,11 +18,6 @@ window.UI = (() => {
     if (toastContainer && document.body.contains(toastContainer)) return toastContainer;
     toastContainer = document.createElement('div');
     toastContainer.id = 'ui-toast-container';
-    toastContainer.style.cssText = `
-      position:fixed; top:20px; right:20px; z-index:99999;
-      display:flex; flex-direction:column; gap:10px;
-      pointer-events:none; max-width:380px;
-    `;
     document.body.appendChild(toastContainer);
     return toastContainer;
   }
@@ -35,10 +30,10 @@ window.UI = (() => {
   };
 
   const TOAST_COLORS = {
-    success: { bg: '#d1fae5', border: '#34d399', icon: '#059669', text: '#065f46' },
-    error:   { bg: '#fee2e2', border: '#f87171', icon: '#dc2626', text: '#7f1d1d' },
-    warning: { bg: '#fef3c7', border: '#fbbf24', icon: '#d97706', text: '#78350f' },
-    info:    { bg: '#dbeafe', border: '#60a5fa', icon: '#2563eb', text: '#1e3a8a' }
+    success: { bg: '#f0fdf4', border: '#bbf7d0', icon: '#16a34a', text: '#14532d' },
+    error:   { bg: '#fef2f2', border: '#fecaca', icon: '#dc2626', text: '#7f1d1d' },
+    warning: { bg: '#fffbeb', border: '#fde68a', icon: '#d97706', text: '#78350f' },
+    info:    { bg: '#f0f9ff', border: '#bae6fd', icon: '#0284c7', text: '#0c4a6e' }
   };
 
   function toast(type = 'info', title = '', message = '', duration = 4000) {
@@ -47,15 +42,9 @@ window.UI = (() => {
     const icon   = TOAST_ICONS[type]  || TOAST_ICONS.info;
 
     const el = document.createElement('div');
-    el.style.cssText = `
-      display:flex; align-items:flex-start; gap:12px; padding:14px 16px;
-      background:${colors.bg}; border:1.5px solid ${colors.border};
-      border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.12);
-      pointer-events:all; cursor:pointer; min-width:280px;
-      animation:slideInRight .3s cubic-bezier(.22,1,.36,1) both;
-      transition:opacity .3s ease, transform .3s ease;
-      font-family:'Inter',system-ui,sans-serif;
-    `;
+    el.className = 'ui-toast';
+    el.style.background = colors.bg;
+    el.style.borderColor = colors.border;
 
     el.innerHTML = `
       <div style="color:${colors.icon};flex-shrink:0;margin-top:1px">${icon}</div>
@@ -67,14 +56,6 @@ window.UI = (() => {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     `;
-
-    // Inject keyframe if needed
-    if (!document.getElementById('ui-toast-anim')) {
-      const s = document.createElement('style');
-      s.id = 'ui-toast-anim';
-      s.textContent = `@keyframes slideInRight{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}`;
-      document.head.appendChild(s);
-    }
 
     c.appendChild(el);
     el.addEventListener('click', () => dismiss(el));
@@ -110,12 +91,6 @@ window.UI = (() => {
           </svg>
           <span>${loadingText}</span>
         </span>`;
-      if (!document.getElementById('ui-spin-anim')) {
-        const s = document.createElement('style');
-        s.id = 'ui-spin-anim';
-        s.textContent = `@keyframes spin{to{transform:rotate(360deg)}}`;
-        document.head.appendChild(s);
-      }
     } else {
       btn.disabled      = false;
       btn.style.opacity = '';
@@ -130,7 +105,6 @@ window.UI = (() => {
   // ── Confirm Dialog ─────────────────────────────────────────────────────────
   function confirm(message, title = 'Confirm Action', confirmText = 'Confirm', isDangerous = false) {
     return new Promise(resolve => {
-      // Remove any existing dialog
       document.getElementById('ui-confirm-overlay')?.remove();
 
       const overlay = document.createElement('div');
@@ -141,32 +115,17 @@ window.UI = (() => {
         font-family:'Inter',system-ui,sans-serif;
         animation:fadeIn .2s ease;
       `;
-      if (!document.getElementById('ui-fade-anim')) {
-        const s = document.createElement('style');
-        s.id = 'ui-fade-anim';
-        s.textContent = `@keyframes fadeIn{from{opacity:0}to{opacity:1}}`;
-        document.head.appendChild(s);
-      }
       overlay.innerHTML = `
-        <div style="background:#fff;border-radius:16px;padding:28px 32px;max-width:420px;width:90%;
-                    box-shadow:0 20px 60px rgba(0,0,0,.2);animation:slideUp .25s cubic-bezier(.22,1,.36,1)">
-          <h3 style="margin:0 0 10px;font-size:1.125rem;font-weight:700;color:#111">${title}</h3>
-          <p style="margin:0 0 24px;font-size:.9rem;color:#555;line-height:1.5">${message}</p>
+        <div style="background:#fff;border-radius:12px;padding:24px 28px;max-width:400px;width:90%;
+                    box-shadow:0 15px 45px rgba(0,0,0,.15);animation:slideUp .25s cubic-bezier(.22,1,.36,1)">
+          <h3 style="margin:0 0 10px;font-size:1.1rem;font-weight:700;color:var(--primary-color)">${title}</h3>
+          <p style="margin:0 0 20px;font-size:.9rem;color:#555;line-height:1.5">${message}</p>
           <div style="display:flex;gap:12px;justify-content:flex-end">
-            <button id="ui-confirm-cancel" style="padding:9px 20px;border:1.5px solid #d1d5db;background:#fff;
-                    border-radius:8px;cursor:pointer;font-size:.875rem;font-weight:500;color:#374151">Cancel</button>
-            <button id="ui-confirm-ok" style="padding:9px 20px;border:none;
-                    background:${isDangerous?'#dc2626':'#2563eb'};color:#fff;
-                    border-radius:8px;cursor:pointer;font-size:.875rem;font-weight:600">${confirmText}</button>
+            <button id="ui-confirm-cancel" class="btn btn-outline-primary" style="padding:6px 16px !important;background:none !important;color:var(--primary-color) !important">Cancel</button>
+            <button id="ui-confirm-ok" class="btn btn-primary" style="padding:6px 16px !important;background:${isDangerous?'#dc2626':'var(--primary-color)'} !important;border-color:${isDangerous?'#dc2626':'var(--primary-color)'} !important">${confirmText}</button>
           </div>
         </div>
       `;
-      if (!document.getElementById('ui-slideup-anim')) {
-        const s = document.createElement('style');
-        s.id = 'ui-slideup-anim';
-        s.textContent = `@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`;
-        document.head.appendChild(s);
-      }
       document.body.appendChild(overlay);
 
       const close = (val) => { overlay.remove(); resolve(val); };
@@ -179,19 +138,11 @@ window.UI = (() => {
   // ── Skeleton Loader ────────────────────────────────────────────────────────
   function skeleton(container, rows = 5, cols = 4) {
     if (!container) return;
-    const shimmer = `
-      <style>
-        @keyframes shimmer{0%{background-position:-800px 0}100%{background-position:800px 0}}
-        .ui-skeleton-cell{height:18px;border-radius:6px;
-          background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 37%,#f0f0f0 63%);
-          background-size:800px 100%;animation:shimmer 1.4s infinite;}
-      </style>
-    `;
-    let html = shimmer + '<table style="width:100%;border-collapse:collapse">';
+    let html = '<table style="width:100%;border-collapse:collapse">';
     for (let r = 0; r < rows; r++) {
       html += '<tr>';
       for (let c = 0; c < cols; c++) {
-        html += `<td style="padding:14px 12px"><div class="ui-skeleton-cell" style="width:${60+Math.random()*30|0}%"></div></td>`;
+        html += `<td style="padding:14px 12px"><div class="skeleton-cell" style="width:${60+Math.random()*30|0}%"></div></td>`;
       }
       html += '</tr>';
     }
@@ -205,43 +156,13 @@ window.UI = (() => {
     const role  = localStorage.getItem('userRole');
     if (!token || !role) {
       sessionStorage.setItem('logoutMessage', 'Please log in to continue.');
-      window.location.href = resolveIndexPath();
+      window.location.href = 'index.html';
       return false;
     }
     return true;
-  }
-
-  function resolveIndexPath() {
-    const path = window.location.pathname;
-    if (path.includes('/html/')) return 'index.html';
-    return '/html/index.html';
   }
 
   // Prevent back-button access to protected pages after logout
-  function preventBackAccess(requiredRole) {
-    const token = localStorage.getItem('token');
-    const role  = localStorage.getItem('userRole');
-    if (!token || !role) {
-      history.replaceState(null, '', resolveIndexPath());
-      window.location.href = resolveIndexPath();
-      return false;
-    }
-    if (requiredRole && role !== requiredRole) {
-      history.replaceState(null, '', resolveIndexPath());
-      window.location.href = resolveIndexPath();
-      return false;
-    }
-    // Push a state so back-button stays on current page
-    history.pushState({ page: 'protected' }, '', window.location.href);
-    window.addEventListener('popstate', () => {
-      if (!localStorage.getItem('token')) {
-        window.location.href = resolveIndexPath();
-      }
-    });
-    return true;
-  }
-
-  // ── Block duplicate async execution ───────────────────────────────────────
   const _runningKeys = new Set();
   async function blockDuplicate(key, fn) {
     if (_runningKeys.has(key)) return null;
@@ -254,12 +175,6 @@ window.UI = (() => {
   }
 
   // ── Search / Filter helpers ────────────────────────────────────────────────
-  /**
-   * Filters an array of objects against a search query across all string fields.
-   * @param {Array} items - Array of objects to filter
-   * @param {string} query - Search string
-   * @param {Array<string>} fields - Fields to search; if empty, searches all string fields
-   */
   function filterItems(items, query, fields = []) {
     if (!query || !query.trim()) return items;
     const q = query.trim().toLowerCase();
@@ -272,12 +187,6 @@ window.UI = (() => {
     });
   }
 
-  /**
-   * Sorts array by a field.
-   * @param {Array} items
-   * @param {string} field
-   * @param {'asc'|'desc'} dir
-   */
   function sortItems(items, field, dir = 'asc') {
     return [...items].sort((a, b) => {
       const av = a[field] != null ? a[field] : '';
@@ -287,12 +196,6 @@ window.UI = (() => {
     });
   }
 
-  /**
-   * Creates a simple pagination object.
-   * @param {Array} items - Full list
-   * @param {number} page - 0-indexed page
-   * @param {number} pageSize
-   */
   function paginate(items, page, pageSize) {
     const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
     const safePage   = Math.max(0, Math.min(page, totalPages - 1));
@@ -307,20 +210,14 @@ window.UI = (() => {
     };
   }
 
-  /**
-   * Renders a pagination bar into a container element.
-   * @param {HTMLElement} el
-   * @param {object} page - result from paginate()
-   * @param {function} onNavigate - called with new page index
-   */
   function renderPagination(el, page, onNavigate) {
     if (!el) return;
     if (page.totalPages <= 1) { el.innerHTML = ''; return; }
     const btn = (label, pg, disabled) =>
       `<button class="ui-page-btn${disabled?' disabled':''}" data-page="${pg}"
-               style="padding:6px 12px;border:1.5px solid ${disabled?'#e5e7eb':'#2563eb'};
-               background:${disabled?'#f9fafb':'#2563eb'};color:${disabled?'#9ca3af':'#fff'};
-               border-radius:7px;cursor:${disabled?'default':'pointer'};font-size:.8125rem;
+               style="padding:6px 12px;border:1.5px solid ${disabled?'#e5e7eb':'var(--primary-color)'};
+               background:${disabled?'#f9fafb':'var(--primary-color)'};color:${disabled?'#9ca3af':'#fff'};
+               border-radius:6px;cursor:${disabled?'default':'pointer'};font-size:.8125rem;
                font-weight:500;transition:all .15s">${label}</button>`;
     el.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;padding-top:8px">
@@ -336,8 +233,8 @@ window.UI = (() => {
   // ── Status badge helper ────────────────────────────────────────────────────
   function statusBadge(status) {
     const map = {
-      'Open':        { bg:'#dbeafe', color:'#1d4ed8', border:'#93c5fd' },
-      'Assigned':    { bg:'#ede9fe', color:'#6d28d9', border:'#c4b5fd' },
+      'Open':        { bg:'#e0f2fe', color:'#0369a1', border:'#bae6fd' },
+      'Assigned':    { bg:'#f3e8ff', color:'#6b21a8', border:'#e9d5ff' },
       'In Progress': { bg:'#fef3c7', color:'#92400e', border:'#fcd34d' },
       'Resolved':    { bg:'#d1fae5', color:'#065f46', border:'#6ee7b7' },
       'Closed':      { bg:'#f3f4f6', color:'#374151', border:'#d1d5db' },
@@ -358,7 +255,7 @@ window.UI = (() => {
     const c = map[priority] || { bg:'#f3f4f6', color:'#374151', border:'#d1d5db' };
     return `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
       background:${c.bg};color:${c.color};border:1px solid ${c.border};
-      font-size:.75rem;font-weight:600;letter-spacing:.02em;white-space:nowrap">${priority || 'N/A'}</span>`;
+      font-size:.75rem;font-weight:600;letter-spacing:.02em;white-space:nowrap">${priority || 'Low'}</span>`;
   }
 
   function availBadge(avail) {
@@ -389,16 +286,15 @@ window.UI = (() => {
       font-size:.75rem;font-weight:600;letter-spacing:.02em;white-space:nowrap">${label}</span>`;
   }
 
-  // ── Empty state helper ─────────────────────────────────────────────────────
   function emptyState(message = 'No records found', icon = '📋') {
     return `
-      <div style="text-align:center;padding:60px 20px;color:#9ca3af">
-        <div style="font-size:3rem;margin-bottom:12px">${icon}</div>
-        <div style="font-size:.9375rem;font-weight:500;color:#6b7280">${message}</div>
+      <div class="empty-state">
+        <span class="empty-state-icon">${icon}</span>
+        <h5>No Records Found</h5>
+        <p>${message}</p>
       </div>`;
   }
 
-  // ── Validation helpers ─────────────────────────────────────────────────────
   function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
   }
@@ -412,7 +308,6 @@ window.UI = (() => {
     return String(pw || '').length >= minLen;
   }
 
-  /** Client-side duplicate check against a user list from GET /users. */
   function checkDuplicateUser(users, { username, email, excludeId } = {}) {
     const un = String(username || '').trim().toLowerCase();
     const em = String(email || '').trim().toLowerCase();
@@ -428,32 +323,12 @@ window.UI = (() => {
     return { ok: true };
   }
 
-  /** Wrap async API calls with toast on failure. */
-  async function handleApi(fn, { successMsg, errorMsg, onSuccess } = {}) {
-    try {
-      const result = await fn();
-      if (result && result.success !== false) {
-        if (successMsg) toast('success', 'Success', successMsg);
-        if (onSuccess) onSuccess(result);
-        return result;
-      }
-      toast('error', 'Error', (result && result.message) || errorMsg || 'Request failed');
-      return result;
-    } catch (err) {
-      console.error(err);
-      toast('error', 'Error', errorMsg || 'Network error. Please try again.');
-      return { success: false };
-    }
-  }
-
-  // ── Public API ─────────────────────────────────────────────────────────────
   return {
     toast, setLoading, confirm, skeleton,
-    guardSession, preventBackAccess, blockDuplicate,
+    guardSession, blockDuplicate,
     filterItems, sortItems, paginate, renderPagination,
     statusBadge, priorityBadge, availBadge, roleBadge,
     emptyState,
-    validateEmail, validatePhone, validatePassword, checkDuplicateUser,
-    handleApi
+    validateEmail, validatePhone, validatePassword, checkDuplicateUser
   };
 })();

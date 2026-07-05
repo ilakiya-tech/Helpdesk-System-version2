@@ -104,7 +104,10 @@
             background-color: var(--white);
             border-radius: 0.75rem;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid #e2e8f0;
         }
 
         .ticket-table th {
@@ -114,6 +117,7 @@
             padding: 1rem;
             text-align: left;
             cursor: pointer;
+            border-bottom: 1.5px solid #cbd5e1;
         }
 
         .ticket-table th:hover {
@@ -169,29 +173,6 @@
             margin-left: 5px;
         }
 
-        /* Toast notification */
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-        
-        .toast {
-            background-color: #4caf50;
-            color: white;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .toast.show {
-            opacity: 1;
-        }
-        
         .view-details-btn {
             background-color: var(--primary-color);
             color: white;
@@ -224,18 +205,6 @@
 <div class="d-flex layout-row layout-with-sidebar">
     <aside id="sidebar-container"></aside>
     <div class="flex-grow-1 main-content p-4">
-        <!-- Navigation Bar -->
-        <nav class="navbar navbar-expand-lg navbar-dark d-none">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="#">
-                <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="100" height="100" fill="var(--primary-color)" />
-                        <text x="50" y="50" text-anchor="middle" dy=".3em" fill="white" font-size="40" font-weight="bold">CC</text>
-                    </svg>
-                    Admin Dashboard
-                </a>
-            </div>
-        </nav>
         
         <div class="dashboard">
             <div class="dashboard-header">
@@ -259,19 +228,13 @@
                 <!-- SLA Summary Row -->
                 <div class="row g-3 mb-4" id="sla-summary-row">
                     <div class="col-12"><h6 class="text-muted fw-semibold text-uppercase" style="letter-spacing:.05em">SLA Overview</h6></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #0052CC"><h3 id="sla-open" style="color:#0052CC">-</h3><p>Open</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #403294"><h3 id="sla-assigned" style="color:#403294">-</h3><p>Assigned</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #974F0C"><h3 id="sla-inprogress" style="color:#974F0C">-</h3><p>In Progress</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #00875A"><h3 id="sla-resolved" style="color:#00875A">-</h3><p>Resolved</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #42526E"><h3 id="sla-closed" style="color:#42526E">-</h3><p>Closed</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #FF5630"><h3 id="sla-overdue" style="color:#FF5630">-</h3><p>Overdue</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #DE350B"><h3 id="sla-breach" style="color:#DE350B">-</h3><p>Breached SLA</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #6554C0"><h3 id="sla-avg-response" style="color:#6554C0;font-size:1.2rem">-</h3><p>Avg Response</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #00B8D9"><h3 id="sla-avg-resolution" style="color:#00B8D9;font-size:1.2rem">-</h3><p>Avg Resolution</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #00875A"><h3 id="sla-consumers" style="color:#00875A">-</h3><p>Consumers</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #0052CC"><h3 id="sla-staff" style="color:#0052CC">-</h3><p>Active Staff</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #16a34a"><h3 id="sla-in" style="color:#16a34a">-</h3><p>Within SLA</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #ea580c"><h3 id="sla-risk" style="color:#ea580c">-</h3><p>At Risk</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #dc2626"><h3 id="sla-breach" style="color:#dc2626">-</h3><p>Breached</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #2563eb"><h3 id="sla-resolved-ok" style="color:#2563eb">-</h3><p>Resolved Within SLA</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #7c3aed"><h3 id="sla-avg-response" style="color:#7c3aed;font-size:1.2rem">-</h3><p>Avg Response</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #0891b2"><h3 id="sla-avg-resolution" style="color:#0891b2;font-size:1.2rem">-</h3><p>Avg Resolution</p></div></div>
                 </div>
-
 
                 <div class="row g-2 mb-4 quick-links">
                     <div class="col-auto"><a href="admin-users.html" class="btn btn-outline-primary btn-sm">User Management</a></div>
@@ -317,18 +280,16 @@
             </div>
 
             <div id="tickets-section" style="display:none">
-                <h4 class="mb-3">Tickets Log</h4>
-                <div class="filter-container filter-bar">
-                    <input type="text" id="search-ticket" placeholder="Search by ID, title, customer…" oninput="filterTickets()">
-                    <select id="status-filter" onchange="filterTickets()">
+                <h4 class="mb-3 fw-bold">Tickets Log</h4>
+                <div class="filter-container">
+                    <input type="text" class="form-control" id="search-ticket" placeholder="Search by Ticket ID or Customer" oninput="filterTickets()">
+                    <select class="form-select" id="status-filter" onchange="filterTickets()">
                         <option value="">All Statuses</option>
                         <option value="open">Open</option>
-                        <option value="assigned">Assigned</option>
                         <option value="in-progress">In Progress</option>
                         <option value="resolved">Resolved</option>
-                        <option value="closed">Closed</option>
                     </select>
-                    <select id="priority-filter" onchange="filterTickets()">
+                    <select class="form-select" id="priority-filter" onchange="filterTickets()">
                         <option value="">All Priorities</option>
                         <option value="critical">Critical</option>
                         <option value="high">High</option>
@@ -338,7 +299,7 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="ticket-table">
+                    <table class="ticket-table table-hover">
                         <thead>
                             <tr>
                                 <th onclick="sortTable(0)">Ticket ID <span class="sort-icon"></span></th>
@@ -362,16 +323,12 @@
     </div>
 </div>
 
-    <!-- Toast notification container -->
-    <div class="toast-container" id="toastContainer"></div>
-
     <script src="../js/api.js"></script>
     <script src="../js/ui.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/sidebar.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Check authentication
         if (!requireAuth(['admin'])) throw new Error('auth');
 
         // Inject Sidebar
@@ -405,25 +362,15 @@
                     document.getElementById('stat-staff').textContent    = r.summary.totalStaff        || 0;
                     document.getElementById('stat-open').textContent     = r.summary.openTickets       || 0;
                     document.getElementById('stat-holidays').textContent = r.summary.holidaysThisMonth || 0;
-                    const badge = document.getElementById('unassigned-badge');
-                    if (r.summary.unassignedTickets > 0) {
-                        badge.textContent = r.summary.unassignedTickets;
-                        badge.style.display = 'inline';
-                    }
                 }
                 const sr = await API.getReportsSummary();
                 if (sr) {
-                    document.getElementById('sla-open').textContent          = sr.open        ?? '-';
-                    document.getElementById('sla-assigned').textContent      = sr.assigned    ?? '-';
-                    document.getElementById('sla-inprogress').textContent   = sr.inProgress  ?? '-';
-                    document.getElementById('sla-resolved').textContent    = sr.resolved    ?? '-';
-                    document.getElementById('sla-closed').textContent       = sr.closed      ?? '-';
-                    document.getElementById('sla-overdue').textContent      = sr.overdue     ?? '-';
-                    document.getElementById('sla-breach').textContent        = sr.breached    ?? '-';
-                    document.getElementById('sla-avg-response').textContent   = API.fmtMinutes(sr.avgResponseMinutes);
-                    document.getElementById('sla-avg-resolution').textContent = API.fmtMinutes(sr.avgResolutionMinutes);
-                    document.getElementById('sla-consumers').textContent     = sr.totalConsumers ?? '-';
-                    document.getElementById('sla-staff').textContent         = sr.activeStaff    ?? '-';
+                    document.getElementById('sla-in').textContent          = sr.inSla    ?? '-';
+                    document.getElementById('sla-risk').textContent        = sr.atRisk   ?? '-';
+                    document.getElementById('sla-breach').textContent      = sr.breached ?? '-';
+                    document.getElementById('sla-resolved-ok').textContent = sr.resolvedWithinSla ?? '-';
+                    document.getElementById('sla-avg-response').textContent   = fmtMinutes(sr.avgResponseMinutes);
+                    document.getElementById('sla-avg-resolution').textContent = fmtMinutes(sr.avgResolutionMinutes);
                 }
             } catch (e) { console.error('loadSummary error:', e); }
         }
@@ -435,16 +382,13 @@
             return h + 'h ' + min + 'm';
         }
 
-
         async function loadStaffDropdown() {
             const r = await API.getStaffList();
-            // getStaffList() always returns { success, staff:[...] }
             staffList = (r.staff || []).filter(s => s.availability === 'available');
         }
 
         async function loadUpcomingHolidays() {
             const r = await API.getHolidaysPublic();
-            // getHolidaysPublic() returns { success:true, holidays:[...] } after normalization
             const now = new Date();
             const upcoming = (r.holidays || []).filter(h => new Date(h.date) >= now).slice(0, 3);
             document.getElementById('upcoming-holidays').innerHTML = upcoming.length
@@ -452,23 +396,16 @@
                 : 'No upcoming holidays';
         }
         
-        // Load tickets on page load
         async function loadTickets() {
             try {
-                document.getElementById('ticket-list').innerHTML = `
-                    <tr>
-                        <td colspan="9" class="text-center py-4">
-                            <div class="spinner-container">
-                                <div class="loading-spinner"></div>
-                            </div>
-                        </td>
-                    </tr>`;
+                const tbody = document.getElementById('ticket-list');
+                UI.skeleton(tbody.parentElement, 5, 9);
                 await loadStaffDropdown();
                 const result = await API.getTickets();
                 if (result.success) {
                     allTickets = result.tickets || [];
                     if (allTickets.length === 0) {
-                        document.getElementById('ticket-list').innerHTML = `
+                        tbody.innerHTML = `
                             <tr>
                                 <td colspan="9" class="text-center py-5 text-muted">
                                     <div class="empty-state">
@@ -489,6 +426,133 @@
                 console.error('Failed to load tickets:', error);
                 UI.toast('error', 'Error', 'Failed to load tickets');
             }
+        }
+
+        function renderTickets(tickets) {
+            const tbody = document.getElementById('ticket-list');
+            tbody.innerHTML = '';
+            
+            tickets.forEach(ticket => {
+                const statusClass = ticket.status.toLowerCase().replace(' ', '-');
+                const priorityClass = `priority-${ticket.priority.toLowerCase()}`;
+                
+                const row = document.createElement('tr');
+                row.setAttribute('data-status', ticket.status.toLowerCase().replace(' ', '-'));
+                row.setAttribute('data-priority', ticket.priority.toLowerCase());
+                row.setAttribute('data-date', ticket.createdAt || new Date().toISOString().split('T')[0]);
+                
+                row.innerHTML = `
+                    <td>#${ticket.id}</td>
+                    <td>${ticket.customerName || 'N/A'}</td>
+                    <td>${ticket.title}</td>
+                    <td>${UI.statusBadge(ticket.status)}</td>
+                    <td class="${priorityClass} fw-semibold">${ticket.priority}</td>
+                    <td>${new Date(ticket.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                    <td>
+                        ${ticket.assignedTo ? ticket.assignedTo : `
+                            <select class="form-select form-select-sm staff-dropdown" data-ticket-id="${ticket._id || ticket.id}">
+                                <option value="">Select Staff</option>
+                                ${staffOptions()}
+                            </select>
+                        `}
+                    </td>
+                    <td>
+                        ${ticket.assignedTo ? 'Assigned' : `<button class="assign-btn btn btn-sm btn-primary py-1" onclick="assignPerson(this, '${ticket._id || ticket.id}')">Assign</button>`}
+                    </td>
+                    <td><button class="view-details-btn btn btn-sm btn-outline-primary py-1" style="background:transparent !important; color:var(--primary-color) !important" onclick="viewTicketDetails('${ticket.id}')">Details</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        async function assignPerson(button, ticketId) {
+            const row = button.closest('tr');
+            const staffSelect = row.querySelector('.staff-dropdown');
+            const staffId = staffSelect.value;
+            
+            if (!staffId) {
+                UI.toast('warning', 'Warning', 'Please select a staff member');
+                return;
+            }
+            
+            await UI.blockDuplicate('assign-' + ticketId, async () => {
+                UI.setLoading(button, true, 'Assigning…');
+                try {
+                    const result = await API.assignTicketById(ticketId, staffId);
+                    if (result.success) {
+                        UI.toast('success', 'Success', `Ticket assigned to ${result.assignedTo || 'staff'}`);
+                        loadTickets();
+                        loadSummary();
+                    } else {
+                        UI.toast('error', 'Error', result.message || 'Assignment failed');
+                        UI.setLoading(button, false);
+                    }
+                } catch (error) {
+                    UI.toast('error', 'Error', 'Assignment failed');
+                    UI.setLoading(button, false);
+                }
+            });
+        }
+
+        function filterTickets() {
+            const searchInput = document.getElementById('search-ticket').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+            const priorityFilter = document.getElementById('priority-filter').value;
+
+            const filtered = allTickets.filter(ticket => {
+                const matchesSearch = ticket.id.toString().includes(searchInput) || 
+                                      (ticket.title && ticket.title.toLowerCase().includes(searchInput)) ||
+                                      (ticket.customerName && ticket.customerName.toLowerCase().includes(searchInput));
+                const matchesStatus = !statusFilter || ticket.status.toLowerCase().replace(' ', '-') === statusFilter;
+                const matchesPriority = !priorityFilter || ticket.priority.toLowerCase() === priorityFilter;
+                
+                return matchesSearch && matchesStatus && matchesPriority;
+            });
+            
+            renderTickets(filtered);
+        }
+
+        function sortTable(columnIndex) {
+            if (columnIndex === currentSortColumn) {
+                sortDirection *= -1;
+            } else {
+                currentSortColumn = columnIndex;
+                sortDirection = 1;
+            }
+            
+            document.querySelectorAll('th .sort-icon').forEach(icon => icon.textContent = '');
+            const targetTh = document.querySelectorAll('th')[columnIndex];
+            if (targetTh) {
+                const sortIcon = targetTh.querySelector('.sort-icon');
+                if (sortIcon) sortIcon.textContent = sortDirection === 1 ? '▲' : '▼';
+            }
+            
+            const tbody = document.getElementById('ticket-list');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            rows.sort((a, b) => {
+                let valueA, valueB;
+                
+                if (columnIndex === 5) {
+                    valueA = new Date(a.getAttribute('data-date'));
+                    valueB = new Date(b.getAttribute('data-date'));
+                } else {
+                    const cellA = a.querySelector(`td:nth-child(${columnIndex + 1})`);
+                    const cellB = b.querySelector(`td:nth-child(${columnIndex + 1})`);
+                    valueA = cellA ? cellA.textContent.trim() : '';
+                    valueB = cellB ? cellB.textContent.trim() : '';
+                }
+                
+                if (valueA < valueB) return -1 * sortDirection;
+                if (valueA > valueB) return 1 * sortDirection;
+                return 0;
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+        }
+        
+        function viewTicketDetails(ticketId) {
+            window.location.href = `ticket-details.html?id=${ticketId}`;
         }
 
         function renderUnassignedTickets(tickets) {
@@ -518,7 +582,7 @@
                     <td>${ticket.customerName || 'N/A'}</td>
                     <td>${ticket.title}</td>
                     <td>${new Date(ticket.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-                    <td class="${priorityClass}">${ticket.priority}</td>
+                    <td class="${priorityClass} fw-semibold">${ticket.priority}</td>
                     <td>
                         <button class="btn btn-sm btn-primary py-0" onclick="viewAndAssignTicket('${ticket.id}')">Assign</button>
                     </td>
@@ -540,137 +604,7 @@
             return staffList.map(s => `<option value="${s.userId}">${s.name} (${s.department || s.category || 'Staff'})</option>`).join('');
         }
 
-        // Render tickets in table
-        function renderTickets(tickets) {
-            const tbody = document.getElementById('ticket-list');
-            tbody.innerHTML = '';
-            
-            tickets.forEach(ticket => {
-                const statusClass = ticket.status.toLowerCase().replace(' ', '-');
-                const priorityClass = `priority-${ticket.priority.toLowerCase()}`;
-                
-                const row = document.createElement('tr');
-                row.setAttribute('data-status', ticket.status.toLowerCase().replace(' ', '-'));
-                row.setAttribute('data-priority', ticket.priority.toLowerCase());
-                row.setAttribute('data-date', ticket.createdAt || new Date().toISOString().split('T')[0]);
-                
-                row.innerHTML = `
-                    <td>#${ticket.id}</td>
-                    <td>${ticket.customerName || 'N/A'}</td>
-                    <td>${ticket.title}</td>
-                    <td><span class="ticket-status status-${statusClass}">${ticket.status}</span></td>
-                    <td class="${priorityClass}">${ticket.priority}</td>
-                    <td>${new Date(ticket.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-                    <td>
-                        ${ticket.assignedTo ? ticket.assignedTo : `
-                            <select class="staff-dropdown" data-ticket-id="${ticket._id || ticket.id}">
-                                <option value="">Select Staff</option>
-                                ${staffOptions()}
-                            </select>
-                        `}
-                    </td>
-                    <td>
-                        ${ticket.assignedTo ? 'Assigned' : `<button class="assign-btn" onclick="assignPerson(this, '${ticket._id || ticket.id}')">Assign</button>`}
-                    </td>
-                    <td><button class="view-details-btn" onclick="viewTicketDetails('${ticket.id}')">View Details</button></td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-        
-        function logout() {
-            if (confirm("Are you sure you want to logout?")) {
-                localStorage.clear();
-                window.location.href = "index.html";
-            }
-        }
-
-        async function assignPerson(button, ticketId) {
-            const row = button.closest('tr');
-            const staffSelect = row.querySelector('.staff-dropdown');
-            const staffId = staffSelect.value;
-            
-            if (!staffId) {
-                UI.toast('warning', 'Select Staff', 'Please select a staff member');
-                return;
-            }
-            
-            await UI.blockDuplicate('assign-' + ticketId, async () => {
-                UI.setLoading(button, true, 'Assigning…');
-                try {
-                    const result = await API.assignTicketById(ticketId, staffId);
-                    if (result.success) {
-                        UI.toast('success', 'Assigned', `Ticket assigned to ${result.assignedTo || 'staff'}`);
-                        loadTickets();
-                        loadSummary();
-                    } else {
-                        UI.toast('error', 'Failed', result.message || 'Assignment failed');
-                    }
-                } catch (error) {
-                    UI.toast('error', 'Failed', 'Assignment failed');
-                } finally {
-                    UI.setLoading(button, false);
-                }
-            });
-        }
-
-        function filterTickets() {
-            const searchInput = document.getElementById('search-ticket').value.toLowerCase();
-            const statusFilter = document.getElementById('status-filter').value;
-            const priorityFilter = document.getElementById('priority-filter').value;
-
-            const filtered = allTickets.filter(ticket => {
-                const matchesSearch = !searchInput ||
-                    ticket.id.toString().includes(searchInput) ||
-                    (ticket.title && ticket.title.toLowerCase().includes(searchInput)) ||
-                    (ticket.customerName && ticket.customerName.toLowerCase().includes(searchInput));
-                const matchesStatus = !statusFilter || ticket.status.toLowerCase().replace(' ', '-') === statusFilter;
-                const matchesPriority = !priorityFilter || ticket.priority.toLowerCase() === priorityFilter;
-                
-                return matchesSearch && matchesStatus && matchesPriority;
-            });
-            
-            renderTickets(filtered);
-        }
-
-        function sortTable(columnIndex) {
-            if (columnIndex === currentSortColumn) {
-                sortDirection *= -1;
-            } else {
-                currentSortColumn = columnIndex;
-                sortDirection = 1;
-            }
-            
-            document.querySelectorAll('th .sort-icon').forEach(icon => icon.textContent = '');
-            document.querySelectorAll('th')[columnIndex].querySelector('.sort-icon').textContent = sortDirection === 1 ? '▲' : '▼';
-            
-            const tbody = document.getElementById('ticket-list');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            
-            rows.sort((a, b) => {
-                let valueA, valueB;
-                
-                if (columnIndex === 5) {
-                    valueA = new Date(a.getAttribute('data-date'));
-                    valueB = new Date(b.getAttribute('data-date'));
-                } else {
-                    valueA = a.querySelector(`td:nth-child(${columnIndex + 1})`).textContent.trim();
-                    valueB = b.querySelector(`td:nth-child(${columnIndex + 1})`).textContent.trim();
-                }
-                
-                if (valueA < valueB) return -1 * sortDirection;
-                if (valueA > valueB) return 1 * sortDirection;
-                return 0;
-            });
-            
-            rows.forEach(row => tbody.appendChild(row));
-        }
-        
-        function viewTicketDetails(ticketId) {
-            window.location.href = `ticket-details.html?id=${ticketId}`;
-        }
-
-        // Load tickets when page loads
+        // Load dashboard info
         loadSummary();
         loadUpcomingHolidays();
         loadTickets();

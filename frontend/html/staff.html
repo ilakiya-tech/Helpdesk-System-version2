@@ -83,7 +83,10 @@
             background-color: var(--white);
             border-radius: 0.75rem;
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid #e2e8f0;
         }
 
         .ticket-table th {
@@ -94,33 +97,12 @@
             font-size: 0.875rem;
             padding: 1rem;
             text-align: left;
+            border-bottom: 1.5px solid #cbd5e1;
         }
 
         .ticket-table td {
             padding: 1rem;
             border-bottom: 1px solid var(--border-color);
-        }
-
-        .ticket-status {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-open { 
-            background-color: #e6f2ff; 
-            color: #1e3a8a; 
-        }
-        .status-in-progress { 
-            background-color: #dbeafe; 
-            color: #1d4ed8; 
-        }
-        .status-resolved { 
-            background-color: #ddf4e4; 
-            color: #166534; 
         }
 
         .view-details-btn {
@@ -130,7 +112,7 @@
             border-radius: 0.375rem;
             padding: 0.5rem 1rem;
             font-size: 0.875rem;
-            font-weight: 500;
+            font-weight: 550;
             cursor: pointer;
             transition: background-color 0.2s;
         }
@@ -139,41 +121,34 @@
             background-color: var(--secondary-color);
         }
 
+        .staff-status-card {
+            background-color: var(--white);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: justify;
+            gap: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
         @media (max-width: 768px) {
-            .dashboard {
-                padding: 1rem;
-            }
-
-            .dashboard-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .ticket-filters {
-                flex-direction: column;
-            }
+            .layout-row { flex-direction: column !important; }
+            .dashboard { padding: 1rem; }
+            .staff-status-card { flex-direction: column; align-items: stretch; gap: 1rem; }
+            .ticket-filters { flex-direction: column; }
         }
     </style>
 </head>
 <body>
 <div class="d-flex layout-row layout-with-sidebar">
     <aside id="sidebar-container"></aside>
-    <div class="flex-grow-1 main-content">
-        <!-- Navigation Bar -->
-        <nav class="navbar navbar-expand-lg navbar-dark d-none">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="#">
-                    <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="100" height="100" fill="var(--primary-color)" />
-                        <text x="50" y="50" text-anchor="middle" dy=".3em" fill="white" font-size="40" font-weight="bold">CC</text>
-                    </svg>
-                    Staff Dashboard
-                </a>
-            </div>
-        </nav>
+    <div class="flex-grow-1 main-content p-4">
         
         <div class="dashboard">
+            <!-- Dashboard Header -->
             <div class="dashboard-header">
                 <div class="logo-container">
                     <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -182,123 +157,118 @@
                     </svg>
                     <span class="company-name">Carbochem</span>
                 </div>
-                <h1>Field Staff Ticket Dashboard</h1>
             </div>
 
-            <div id="availability-section" style="display:none">
-                <div class="card mb-3" id="availability">
-                    <div class="card-body py-3">
-                        <h5 class="mb-3">Update Availability & Leave Status</h5>
-                        <div class="d-flex align-items-center gap-3 flex-wrap">
-                            <strong>My Status:</strong>
-                            <select class="form-select form-select-sm" style="max-width:180px" id="avail-select">
-                                <option value="available">Available</option>
-                                <option value="on_leave">On Leave</option>
-                                <option value="busy">Busy</option>
-                            </select>
-                            <span id="avail-status" class="badge bg-success">Available</span>
-                        </div>
-                    </div>
+            <!-- Staff Status Card -->
+            <div class="staff-status-card">
+                <div>
+                    <h5 class="mb-1 text-primary fw-bold" id="staff-name-display">Loading...</h5>
+                    <p class="text-muted mb-0 small">Update your status to manage incoming ticket assignments</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold small text-secondary">My Availability:</span>
+                    <span id="avail-badge-container"></span>
+                    <select class="form-select form-select-sm ms-2" id="avail-select" style="width: auto;">
+                        <option value="available">Available</option>
+                        <option value="on_leave">On Leave</option>
+                        <option value="busy">Busy</option>
+                    </select>
                 </div>
             </div>
 
-            <div id="tickets-section">
-                <h4 class="mb-3">Assigned Tickets</h4>
-                <div class="ticket-filters mb-3" id="tickets">
-                    <select id="status-filter" class="form-select"><option value="">All Statuses</option><option value="open">Open</option><option value="in-progress">In Progress</option><option value="resolved">Resolved</option></select>
-                    <input type="text" id="search-input" class="form-control" placeholder="Search tickets...">
-                </div>
+            <h4 class="mb-3 text-primary fw-bold">My Assigned Tickets</h4>
+            
+            <!-- Filters -->
+            <div class="ticket-filters">
+                <input type="text" class="form-control" id="search-input" placeholder="Search by Ticket ID, title or customer...">
+                <select class="form-select" id="status-filter" style="max-width:200px">
+                    <option value="">All Statuses</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="closed">Closed</option>
+                </select>
+            </div>
 
-                <div class="table-responsive">
-                    <table class="ticket-table" id="ticket-table">
-                        <thead>
-                            <tr>
-                                <th>Ticket ID</th>
-                                <th>Title</th>
-                                <th>Customer</th>
-                                <th>Created Date</th>
-                                <th>Status</th>
-                                <th>Priority</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ticket-list">
-                            <!-- Tickets will be dynamically populated from API -->
-                        </tbody>
-                    </table>
-                </div>
+            <!-- Tickets Table -->
+            <div class="table-responsive">
+                <table class="ticket-table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ticket ID</th>
+                            <th>Title</th>
+                            <th>Customer Name</th>
+                            <th>Date Assigned</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticket-list">
+                        <!-- Loaded via API -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
     <script src="../js/api.js"></script>
+    <script src="../js/ui.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/sidebar.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Check authentication
-        if (!localStorage.getItem('token') || localStorage.getItem('userRole') !== 'staff') {
-            window.location.href = 'index.html';
-        }
+        if (!requireAuth(['staff'])) throw new Error('auth');
 
         // Inject Sidebar
         Sidebar.inject('staff', 'staff.html');
 
-        function switchTab() {
-            const hash = window.location.hash;
-            const availSec = document.getElementById('availability-section');
-            const tickSec = document.getElementById('tickets-section');
-            
-            if (hash === '#availability') {
-                if (availSec) availSec.style.display = 'block';
-                if (tickSec) tickSec.style.display = 'none';
-            } else {
-                if (availSec) availSec.style.display = 'none';
-                if (tickSec) tickSec.style.display = 'block';
-            }
-        }
-        window.addEventListener('hashchange', switchTab);
-        window.addEventListener('load', switchTab);
-
         let allTickets = [];
 
         async function loadAvailability() {
-            const r = await API.getStaffList();
-            const me = (r.staff || []).find(s => s.username === localStorage.getItem('username'));
-            if (me) {
-                document.getElementById('avail-select').value = me.availability || 'available';
-                updateAvailBadge(me.availability);
+            const uid = localStorage.getItem('userId');
+            if (uid) {
+                const r = await API.getStaffList();
+                const list = r.staff || [];
+                const cur = list.find(s => String(s.userId) === String(uid));
+                if (cur) {
+                    document.getElementById('staff-name-display').textContent = cur.name || localStorage.getItem('name') || 'Field Staff';
+                    const av = cur.availability || 'available';
+                    document.getElementById('avail-select').value = av;
+                    updateAvailBadge(av);
+                } else {
+                    document.getElementById('staff-name-display').textContent = localStorage.getItem('name') || 'Field Staff';
+                    updateAvailBadge('available');
+                }
             }
         }
 
-        function updateAvailBadge(a) {
-            const el = document.getElementById('avail-status');
-            const map = { available: ['Available','bg-success'], on_leave: ['On Leave','bg-warning text-dark'], busy: ['Busy','bg-danger'] };
-            const [t,c] = map[a] || map.available;
-            el.textContent = t; el.className = 'badge ' + c;
+        function updateAvailBadge(avail) {
+            document.getElementById('avail-badge-container').innerHTML = UI.availBadge(avail);
         }
 
         document.getElementById('avail-select').addEventListener('change', async e => {
             const uid = localStorage.getItem('userId');
-            if (uid) {
-                await API.updateStaffAvailability(uid, e.target.value);
-                updateAvailBadge(e.target.value);
-            }
+            const select = e.target;
+            select.disabled = true;
+            await UI.blockDuplicate('avail-change', async () => {
+                const val = select.value;
+                const r = await API.updateStaffAvailability(uid, val);
+                select.disabled = false;
+                if (r.success) {
+                    UI.toast('success', 'Success', `Status updated to ${val.replace('_',' ')}`);
+                    updateAvailBadge(val);
+                } else {
+                    UI.toast('error', 'Error', r.message || 'Failed to update status');
+                }
+            });
         });
 
-        // Load assigned tickets for this staff member
         async function loadTickets() {
             try {
                 const ticketList = document.getElementById('ticket-list');
-                ticketList.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="text-center py-4">
-                            <div class="spinner-container">
-                                <div class="loading-spinner"></div>
-                            </div>
-                        </td>
-                    </tr>`;
+                UI.skeleton(ticketList.parentElement, 4, 7);
                 const result = await API.getAssigned();
                 if (result.success) {
                     allTickets = result.tickets || [];
@@ -318,13 +288,16 @@
                     }
                 } else {
                     ticketList.innerHTML = `<tr><td colspan="7" class="text-danger text-center py-4">Failed to load tickets: ${result.message || 'Unknown error'}</td></tr>`;
+                    UI.toast('error', 'Error', result.message || 'Failed to load tickets');
                 }
             } catch (error) {
                 console.error('Failed to load tickets:', error);
+                UI.toast('error', 'Error', 'Failed to load tickets');
             }
         }
 
         function formatDate(dateString) {
+            if (!dateString) return '-';
             const date = new Date(dateString);
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -338,26 +311,21 @@
             ticketList.innerHTML = '';
             
             if (filteredTickets.length === 0) {
-                ticketList.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No tickets assigned to you</td></tr>';
+                ticketList.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No tickets found</td></tr>';
                 return;
             }
 
             filteredTickets.forEach(ticket => {
-                const statusClass = ticket.status.toLowerCase().replace(' ', '-');
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>#${ticket.id}</td>
-                    <td>${ticket.title}</td>
+                    <td class="fw-semibold">${ticket.title}</td>
                     <td>${ticket.customerName || 'N/A'}</td>
                     <td>${formatDate(ticket.createdAt)}</td>
+                    <td>${UI.statusBadge(ticket.status)}</td>
+                    <td>${UI.priorityBadge(ticket.priority)}</td>
                     <td>
-                        <span class="ticket-status status-${statusClass}">
-                            ${ticket.status}
-                        </span>
-                    </td>
-                    <td>${ticket.priority}</td>
-                    <td>
-                        <button class="view-details-btn" onclick="viewTicketDetails('${ticket.id}')">View Details</button>
+                        <button class="view-details-btn btn btn-sm btn-outline-primary" style="background:transparent !important; color:var(--primary-color) !important" onclick="viewTicketDetails('${ticket.id}')">Details</button>
                     </td>
                 `;
                 ticketList.appendChild(row);
@@ -377,8 +345,8 @@
         document.getElementById('search-input').addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
             const filteredTickets = allTickets.filter(t => 
-                t.title.toLowerCase().includes(searchTerm) ||
-                t.id.toString().includes(searchTerm) ||
+                (t.title && t.title.toLowerCase().includes(searchTerm)) ||
+                (t.id && t.id.toString().includes(searchTerm)) ||
                 (t.customerName && t.customerName.toLowerCase().includes(searchTerm))
             );
             renderTickets(filteredTickets);
@@ -387,8 +355,6 @@
         function viewTicketDetails(ticketId) {
             window.location.href = `ticket-details.html?id=${ticketId}`;
         }
-
-        // logout() provided by auth.js
 
         // Initial load
         loadAvailability();
