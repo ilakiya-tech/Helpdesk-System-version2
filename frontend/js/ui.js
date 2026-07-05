@@ -597,6 +597,18 @@ window.UI = (() => {
         updateUnreadCount();
       }
     }, 30000);
+
+    // Focused-tab periodic sync poller every 15 seconds to update dashboards automatically
+    setInterval(() => {
+      if (!document.hidden && localStorage.getItem('token')) {
+        if (typeof window.loadTickets === 'function') window.loadTickets();
+        if (typeof window.loadLeaveRequests === 'function') window.loadLeaveRequests();
+        if (typeof window.loadAll === 'function') window.loadAll();
+        if (typeof window.loadUsers === 'function') window.loadUsers();
+        if (typeof window.loadHolidays === 'function') window.loadHolidays();
+        if (typeof window.loadSummary === 'function') window.loadSummary();
+      }
+    }, 15000);
   }
 
   // Auto-init notifications

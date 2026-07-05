@@ -8,3 +8,6 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS specialization VARCHAR(255);
 
 -- Add comments author role column
 ALTER TABLE comments ADD COLUMN IF NOT EXISTS author_role VARCHAR(100);
+
+-- Track ticket creator username securely
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS created_by_name VARCHAR(255);

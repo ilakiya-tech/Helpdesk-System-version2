@@ -78,6 +78,12 @@ public class Ticket {
     
     private String slaStatus;
 
+    @Column(name = "created_by_name")
+    private String createdByName;
+
+    @Transient
+    private java.util.List<ActivityHistory> activityHistory = new java.util.ArrayList<>();
+
 
     public Ticket() {
     }
@@ -232,6 +238,22 @@ public class Ticket {
 
     public void setSlaStatus(String slaStatus) {
         this.slaStatus = slaStatus;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
+    }
+
+    public java.util.List<ActivityHistory> getActivityHistory() {
+        return activityHistory;
+    }
+
+    public void setActivityHistory(java.util.List<ActivityHistory> activityHistory) {
+        this.activityHistory = activityHistory;
     }
 
     @Transient
