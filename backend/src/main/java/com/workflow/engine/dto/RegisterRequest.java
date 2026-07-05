@@ -27,6 +27,8 @@ public record RegisterRequest(
         String mobile,
         String department,
         String availability,
-        String secretKey
+        String secretKey,
+        String designation,
+        String specialization
 ) {
 }

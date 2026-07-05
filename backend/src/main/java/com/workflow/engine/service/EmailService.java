@@ -192,4 +192,25 @@ public class EmailService {
                 "</body></html>";
         sendEmail(to, subject, content);
     }
+
+    public void sendOtpEmail(String to, String name, String otp) {
+        String subject = "Carbochem Helpdesk - Password Reset OTP";
+        String content = "<html><body style='font-family: Arial, sans-serif; color: #1e293b;'>" +
+                "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;'>" +
+                "<div style='background-color: #1F3373; padding: 20px; text-align: center; color: white;'>" +
+                "<h2 style='margin: 0;'>Password Reset OTP</h2>" +
+                "</div>" +
+                "<div style='padding: 24px; line-height: 1.6;'>" +
+                "<p>Hello <strong>" + name + "</strong>,</p>" +
+                "<p>We received a request to reset your password. Use the following One-Time Password (OTP) to proceed:</p>" +
+                "<p style='text-align: center;'><strong style='font-size: 2rem; color: #1F3373; letter-spacing: 5px; background-color: #f1f5f9; padding: 8px 16px; border-radius: 4px; display: inline-block;'>" + otp + "</strong></p>" +
+                "<p>This OTP is valid for 10 minutes. If you did not request a password reset, you can safely ignore this email.</p>" +
+                "<br>" +
+                "<p>Best regards,<br>Carbochem Support Team</p>" +
+                "</div>" +
+                "</div>" +
+                "</body></html>";
+        sendEmail(to, subject, content);
+    }
 }
+

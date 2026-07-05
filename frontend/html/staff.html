@@ -42,84 +42,104 @@
             <div class="staff-status-card" id="availability">
                 <div>
                     <h5 class="mb-1 text-primary fw-bold" id="staff-name-display">Loading...</h5>
-                    <p class="text-muted mb-0 small">Update your status to manage incoming ticket assignments</p>
+                    <p class="text-muted mb-0 small">Managed automatically based on your approved leave requests.</p>
                 </div>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="fw-semibold small text-secondary">My Availability:</span>
                     <span id="avail-badge-container"></span>
-                    <select class="form-select form-select-sm ms-2" id="avail-select" style="width: auto;">
-                        <option value="available">Available</option>
-                        <option value="on_leave">On Leave</option>
-                        <option value="busy">Busy</option>
-                    </select>
                 </div>
             </div>
 
-            <h4 class="mb-3 text-primary fw-bold">My Assigned Tickets</h4>
-            
-            <!-- Compact Filters Row -->
-            <div class="card mb-4"><div class="card-body py-3">
-                <div class="filter-row">
-                    <input type="text" class="form-control" id="search-input" placeholder="Search by Ticket ID, title or customer...">
-                    <select class="form-select" id="status-filter" style="max-width: 260px;">
-                        <option value="">All Statuses</option>
-                        <option value="assigned">Assigned</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="closed">Closed</option>
-                    </select>
-                    <select class="form-select" id="priority-filter" style="max-width: 260px;">
-                        <option value="">All Priorities</option>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="critical">Critical</option>
-                    </select>
-                </div>
-            </div></div>
+            <div id="main-dashboard-content">
+                <h4 class="mb-3 text-primary fw-bold">My Assigned Tickets</h4>
+                
+                <!-- Compact Filters Row -->
+                <div class="card mb-4"><div class="card-body py-3">
+                    <div class="filter-row">
+                        <input type="text" class="form-control" id="search-input" placeholder="Search by Ticket ID, title or customer...">
+                        <select class="form-select" id="status-filter" style="max-width: 260px;">
+                            <option value="">All Statuses</option>
+                            <option value="assigned">Assigned</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                        <select class="form-select" id="priority-filter" style="max-width: 260px;">
+                            <option value="">All Priorities</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                </div></div>
 
-            <!-- Tickets Table -->
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Ticket ID</th>
-                            <th>Title</th>
-                            <th>Customer Name</th>
-                            <th>Date Assigned</th>
-                            <th>Status</th>
-                            <th>Priority</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ticket-list">
-                        <!-- Loaded dynamically via API -->
-                    </tbody>
-                </table>
+                <!-- Tickets Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Title</th>
+                                <th>Customer Name</th>
+                                <th>Date Assigned</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticket-list">
+                            <!-- Loaded dynamically via API -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h4 class="mb-3 mt-5 text-primary fw-bold">My Leave Requests</h4>
+                <div class="card mb-5">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" style="vertical-align: middle;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leave-list">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">No leave requests found</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <h4 class="mb-3 mt-5 text-primary fw-bold">My Leave Requests</h4>
-            <div class="card mb-5">
-                <div class="card-body p-0">
+
+            <!-- Holidays Section (Read-Only) -->
+            <div id="holidays-section" style="display:none">
+                <h4 class="mb-3 text-primary fw-bold">Holiday Calendar</h4>
+                <div class="card mb-5"><div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0" style="vertical-align: middle;">
                             <thead class="table-light">
                                 <tr>
+                                    <th>Holiday Name</th>
+                                    <th>Date</th>
                                     <th>Type</th>
-                                    <th>Start Date</th>
-                                    <th>End Date</th>
-                                    <th>Reason</th>
-                                    <th>Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="leave-list">
+                            <tbody id="read-holiday-list">
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">No leave requests found</td>
+                                    <td colspan="3" class="text-center py-4 text-muted">Loading holidays...</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </div></div>
             </div>
         </div>
     </main>
@@ -192,7 +212,6 @@
                 if (cur) {
                     document.getElementById('staff-name-display').textContent = cur.name || localStorage.getItem('name') || 'Field Staff';
                     currentAvailability = cur.availability || 'available';
-                    document.getElementById('avail-select').value = currentAvailability;
                     updateAvailBadge(currentAvailability);
                 } else {
                     document.getElementById('staff-name-display').textContent = localStorage.getItem('name') || 'Field Staff';
@@ -204,31 +223,6 @@
         function updateAvailBadge(avail) {
             document.getElementById('avail-badge-container').innerHTML = UI.availBadge(avail);
         }
-
-        document.getElementById('avail-select').addEventListener('change', async e => {
-            const select = e.target;
-            const val = select.value;
-            
-            if (val === 'on_leave') {
-                select.value = currentAvailability;
-                leaveModal.show();
-                return;
-            }
-
-            select.disabled = true;
-            await UI.blockDuplicate('avail-change', async () => {
-                const uid = localStorage.getItem('userId');
-                const r = await API.updateStaffAvailability(uid, val);
-                select.disabled = false;
-                if (r.success) {
-                    currentAvailability = val;
-                    UI.toast('success', 'Success', `Status updated to ${val.replace('_',' ')}`);
-                    updateAvailBadge(val);
-                } else {
-                    UI.toast('error', 'Error', r.message || 'Failed to update status');
-                }
-            });
-        });
 
         document.getElementById('leave-request-form').addEventListener('submit', async e => {
             e.preventDefault();
@@ -386,9 +380,51 @@
             window.location.href = `ticket-details.html?id=${ticketId}`;
         }
 
+        async function loadHolidaysReadOnly() {
+            try {
+                const el = document.getElementById('read-holiday-list');
+                if (!el) return;
+                const r = await API.getHolidaysPublic();
+                if (r.success) {
+                    const list = r.holidays || r.items || r._raw || [];
+                    if (!list.length) {
+                        el.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">No holidays defined</td></tr>';
+                        return;
+                    }
+                    list.sort((a,b) => new Date(a.date) - new Date(b.date));
+                    el.innerHTML = list.map(h => `
+                        <tr>
+                            <td class="fw-semibold">${h.name}</td>
+                            <td>${formatDate(h.date)}</td>
+                            <td><span class="badge bg-secondary" style="font-size:0.75rem;">${h.type}</span></td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function switchTab() {
+            const hash = window.location.hash;
+            const mainContent = document.getElementById('main-dashboard-content');
+            const holContent = document.getElementById('holidays-section');
+            if (hash === '#holidays') {
+                if (mainContent) mainContent.style.display = 'none';
+                if (holContent) holContent.style.display = 'block';
+                loadHolidaysReadOnly();
+            } else {
+                if (mainContent) mainContent.style.display = 'block';
+                if (holContent) holContent.style.display = 'none';
+            }
+        }
+        window.addEventListener('hashchange', switchTab);
+        window.addEventListener('load', switchTab);
+
         loadAvailability();
         loadTickets();
         loadLeaveRequests();
+        switchTab();
     </script>
 </body>
 </html>

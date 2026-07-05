@@ -21,9 +21,15 @@ import org.springframework.web.bind.annotation.*;
 public class HolidayController {
 
     private final HolidayRepository holidayRepository;
+    private final com.workflow.engine.service.NotificationService notificationService;
+    private final com.workflow.engine.repository.UserRepository userRepository;
 
-    public HolidayController(HolidayRepository holidayRepository) {
+    public HolidayController(HolidayRepository holidayRepository,
+                             com.workflow.engine.service.NotificationService notificationService,
+                             com.workflow.engine.repository.UserRepository userRepository) {
         this.holidayRepository = holidayRepository;
+        this.notificationService = notificationService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
@@ -64,7 +70,20 @@ public class HolidayController {
             err.put("message", "A holiday on this date already exists");
             return ResponseEntity.status(409).body(err);
         }
-        return ResponseEntity.ok(holidayRepository.save(holiday));
+        Holiday saved = holidayRepository.save(holiday);
+
+        // Notify all users of the new holiday
+        try {
+            String msg = "New Holiday: " + saved.getName() + " on " + saved.getDate() + " (" + saved.getType() + ")";
+            userRepository.findAll().forEach(user -> {
+                notificationService.createNotification(user.getId(), "New Holiday Added", msg, "HOLIDAY_ADDED", saved.getId());
+            });
+        } catch (Exception e) {
+            // Log and tolerate failure to prevent transaction rollback if user count is huge
+            System.err.println("Failed to broadcast holiday notification: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(saved);
     }
 
     @PutMapping("/{id}")

@@ -99,6 +99,10 @@ async function loadStaff() {
     allStaff = sr.staff || [];
     allTickets = tr.tickets || [];
     
+    allStaff.forEach(s => {
+        s.assignedCount = allTickets.filter(t => (t.assignedTo === s.username || t.assignedTo === s.name) && t.status !== 'Resolved' && t.status !== 'Closed').length;
+    });
+
     tableBody.innerHTML = allStaff.map(s => {
         const phone = s.phone || s.mobile || '-';
         return `<tr>
@@ -106,32 +110,12 @@ async function loadStaff() {
             <td>${s.email}</td>
             <td>${phone}</td>
             <td>${s.department || s.category || '-'}</td>
-            <td>
-                <select class="form-select form-select-sm" style="max-width:140px" onchange="setAvail('${s.userId}', this.value, this)">
-                    <option value="available" ${s.availability==='available'?'selected':''}>Available</option>
-                    <option value="on_leave" ${s.availability==='on_leave' || s.availability==='on leave'?'selected':''}>On Leave</option>
-                    <option value="busy" ${s.availability==='busy'?'selected':''}>Busy</option>
-                </select>
-            </td>
-            <td class="fw-semibold">${s.assignedCount || 0}</td>
+            <td>${UI.availBadge(s.availability)}</td>
+            <td class="fw-semibold">${s.assignedCount}</td>
             <td><button class="btn btn-sm btn-outline-primary" style="background:transparent !important; color:var(--primary-color) !important" onclick="showTickets('${s.userId}','${s.name}')">View Tickets</button></td>
         </tr>`;
     }).join('');
     loadLeaveReviews();
-}
-
-async function setAvail(id, val, selectEl) {
-    if (selectEl) selectEl.disabled = true;
-    await UI.blockDuplicate('avail-' + id, async () => {
-        const r = await API.updateStaffAvailability(id, val);
-        if (r.success) {
-            UI.toast('success', 'Success', 'Availability updated');
-            loadStaff();
-        } else {
-            UI.toast('error', 'Error', r.message || 'Failed to update availability');
-            if (selectEl) selectEl.disabled = false;
-        }
-    });
 }
 
 function showTickets(staffId, name) {
@@ -149,7 +133,10 @@ function showTickets(staffId, name) {
             <td>
                 <select class="form-select form-select-sm reassign-dropdown" style="max-width:180px" onchange="reassign('${t._id || t.id}', this.value, this)">
                     <option value="">Reassign to...</option>
-                    ${allStaff.filter(s => s.userId !== staffId).map(s => `<option value="${s.userId}">${s.name}</option>`).join('')}
+                    ${allStaff.filter(s => s.userId !== staffId && s.availability === 'available').map(s => {
+                        const dept = s.department || s.category || 'General';
+                        return `<option value="${s.userId}">${s.name} (${dept}) - Available - ${s.assignedCount} active</option>`;
+                    }).join('')}
                 </select>
             </td>
         </tr>`).join('') : '<tr><td colspan="5" class="text-center py-3 text-muted">No tickets assigned</td></tr>';

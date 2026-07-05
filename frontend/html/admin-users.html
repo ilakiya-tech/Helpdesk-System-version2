@@ -55,9 +55,17 @@
                     <input type="tel" class="form-control" id="u-phone" placeholder="e.g. 9876543210">
                     <div class="error-feedback" id="phone-error">Phone must be exactly 10 digits</div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" id="div-dept">
                     <label class="form-label">Department</label>
                     <input type="text" class="form-control" id="u-dept" placeholder="e.g. Sales / Production">
+                </div>
+                <div class="col-md-4" id="div-designation">
+                    <label class="form-label">Designation</label>
+                    <input type="text" class="form-control" id="u-designation" placeholder="e.g. Senior Support Engineer">
+                </div>
+                <div class="col-md-4" id="div-specialization">
+                    <label class="form-label">Specialization</label>
+                    <input type="text" class="form-control" id="u-specialization" placeholder="e.g. Concrete Additives (Optional)">
                 </div>
                 <div class="col-12 mt-4">
                     <button type="submit" class="btn btn-primary" id="create-user-btn">Create User</button>
@@ -178,15 +186,20 @@ document.getElementById('create-user-form').addEventListener('submit', async e =
     const btn = document.getElementById('create-user-btn');
     await UI.blockDuplicate('create-user', async () => {
         UI.setLoading(btn, true, 'Creating…');
-        const r = await API.createUser({
+        const payload = {
             name,
             email,
             username,
             password,
             role,
-            mobile: phone,
-            department
-        });
+            mobile: phone
+        };
+        if (role === 'staff') {
+            payload.department = department;
+            payload.designation = document.getElementById('u-designation').value.trim();
+            payload.specialization = document.getElementById('u-specialization').value.trim();
+        }
+        const r = await API.createUser(payload);
         UI.setLoading(btn, false);
         if (r.success) {
             UI.toast('success', 'Success', 'User created successfully!');
@@ -197,6 +210,16 @@ document.getElementById('create-user-form').addEventListener('submit', async e =
         }
     });
 });
+
+document.getElementById('u-role').addEventListener('change', () => {
+    const role = document.getElementById('u-role').value;
+    const isStaff = (role === 'staff');
+    document.getElementById('div-dept').style.display = isStaff ? 'block' : 'none';
+    document.getElementById('div-designation').style.display = isStaff ? 'block' : 'none';
+    document.getElementById('div-specialization').style.display = isStaff ? 'block' : 'none';
+});
+// Trigger role change initially on load
+document.getElementById('u-role').dispatchEvent(new Event('change'));
 
 loadUsers();
 </script>

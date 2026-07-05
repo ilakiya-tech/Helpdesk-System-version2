@@ -88,6 +88,8 @@ public class UserController {
                     existing.setMobile(updated.getMobile());
                     existing.setDepartment(updated.getDepartment());
                     existing.setAvailability(updated.getAvailability());
+                    existing.setDesignation(updated.getDesignation());
+                    existing.setSpecialization(updated.getSpecialization());
                     if (updated.getRole() != null) {
                         existing.setRole(updated.getRole());
                     }
@@ -100,6 +102,20 @@ public class UserController {
                     return ResponseEntity.ok(userRepository.save(existing));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/availability")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(
+        summary = "Update user availability status",
+        description = "Updates only the availability status of a staff member. Fast atomic endpoint.",
+        security = @SecurityRequirement(name = "bearerAuth")
+    )
+    public ResponseEntity<?> updateAvailability(@PathVariable Long id, @RequestBody java.util.Map<String, String> payload) {
+        return ResponseEntity.badRequest().body(java.util.Map.of(
+            "success", false,
+            "message", "Direct availability updates are disabled. Availability is managed exclusively via the Leave Request workflow."
+        ));
     }
 
     @DeleteMapping("/{id}")

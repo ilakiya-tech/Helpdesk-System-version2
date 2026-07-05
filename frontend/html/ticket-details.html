@@ -193,12 +193,78 @@
         </div>`).join('');
     }
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
     function renderComments(comments) {
       const el = document.getElementById('comments-list');
       if (!comments.length) { el.innerHTML = '<p class="text-muted small">No comments yet</p>'; return; }
-      el.innerHTML = comments.map(c => `
-        <div class="comment-box"><strong>${c.authorName || 'User'}</strong> <small class="text-muted ms-2">${fmt(c.createdAt)}</small><br><div class="mt-1" style="font-size:0.92rem">${c.text}</div></div>`).join('');
+      
+      el.innerHTML = comments.map(c => {
+        const role = (c.authorRole || 'consumer').toLowerCase();
+        let borderStyle = 'border-left: 4px solid #94a3b8;';
+        let bgStyle = 'background: #f8fafc;';
+        let badgeColor = 'background: #e2e8f0; color: #475569;';
+        let roleLabel = 'Consumer';
+
+        if (role === 'admin') {
+          borderStyle = 'border-left: 4px solid #1F3373;';
+          bgStyle = 'background: #f0f4f8;';
+          badgeColor = 'background: #1F3373; color: #ffffff;';
+          roleLabel = 'Admin';
+        } else if (role === 'staff') {
+          borderStyle = 'border-left: 4px solid #4f46e5;';
+          bgStyle = 'background: #f5f3ff;';
+          badgeColor = 'background: #4f46e5; color: #ffffff;';
+          roleLabel = 'Staff';
+        }
+
+        const roleBadge = `<span class="badge ms-2" style="${badgeColor} font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;">${roleLabel}</span>`;
+        
+        return `
+          <div class="comment-box shadow-sm" style="${borderStyle} ${bgStyle} border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div>
+                <strong style="font-size: 0.92rem; color: #1e293b;">${c.authorName || 'User'}</strong>
+                ${roleBadge}
+              </div>
+              <small class="text-muted" style="font-size: 0.75rem;">${fmt(c.createdAt)}</small>
+            </div>
+            <div style="font-size: 0.92rem; color: #334155; white-space: pre-line;">${escapeHtml(c.text)}</div>
+          </div>
+        `;
+      }).join('');
     }
+
+    let commentsInterval = null;
+    function startCommentsPolling() {
+      if (commentsInterval) clearInterval(commentsInterval);
+      commentsInterval = setInterval(() => {
+        if (!document.hidden && ticketId) {
+          API.getComments(ticketId).then(cr => {
+            if (cr.success) {
+              renderComments(cr.comments || []);
+            }
+          }).catch(err => console.error('Poll comments error:', err));
+        }
+      }, 10000);
+    }
+    function stopCommentsPolling() {
+      if (commentsInterval) {
+        clearInterval(commentsInterval);
+        commentsInterval = null;
+      }
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopCommentsPolling();
+      } else {
+        startCommentsPolling();
+      }
+    });
+    startCommentsPolling();
 
     function checkHolidayWarning(ticket, holidays) {
       if (!ticket.dueDate) return;

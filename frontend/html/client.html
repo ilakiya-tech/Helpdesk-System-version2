@@ -28,58 +28,83 @@
                 <button class="btn btn-primary" onclick="location.hash='#raise'">➕ Raise Ticket</button>
             </div>
 
-            <!-- Compact metrics card grid -->
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-md-3">
-                    <div class="card mb-0 text-center py-3">
-                        <h4 class="mb-0 text-primary fw-bold" id="stat-open">0</h4>
-                        <small class="text-muted">Open</small>
+            <div id="main-dashboard-content">
+                <!-- Compact metrics card grid -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="card mb-0 text-center py-3">
+                            <h4 class="mb-0 text-primary fw-bold" id="stat-open">0</h4>
+                            <small class="text-muted">Open</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card mb-0 text-center py-3">
+                            <h4 class="mb-0 text-primary fw-bold" id="stat-inprogress">0</h4>
+                            <small class="text-muted">In Progress</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card mb-0 text-center py-3">
+                            <h4 class="mb-0 text-success fw-bold" id="stat-resolved">0</h4>
+                            <small class="text-muted">Resolved</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card mb-0 text-center py-3">
+                            <h4 class="mb-0 text-secondary fw-bold" id="stat-closed">0</h4>
+                            <small class="text-muted">Closed</small>
+                        </div>
                     </div>
                 </div>
-                <div class="col-6 col-md-3">
-                    <div class="card mb-0 text-center py-3">
-                        <h4 class="mb-0 text-primary fw-bold" id="stat-inprogress">0</h4>
-                        <small class="text-muted">In Progress</small>
+
+                <div class="alert alert-info py-2 mb-4 small" id="holiday-notice" style="display:none"></div>
+
+                <div class="card mb-4"><div class="card-body py-3">
+                    <div class="filter-row">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search tickets by ID, title...">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="open">Open</option>
+                            <option value="assigned">Assigned</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                        <select class="form-select" id="priorityFilter">
+                            <option value="">All Priorities</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
                     </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card mb-0 text-center py-3">
-                        <h4 class="mb-0 text-success fw-bold" id="stat-resolved">0</h4>
-                        <small class="text-muted">Resolved</small>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card mb-0 text-center py-3">
-                        <h4 class="mb-0 text-secondary fw-bold" id="stat-closed">0</h4>
-                        <small class="text-muted">Closed</small>
-                    </div>
-                </div>
+                </div></div>
+
+                <div id="tickets" class="ticket-list"></div>
             </div>
 
-            <div class="alert alert-info py-2 mb-4 small" id="holiday-notice" style="display:none"></div>
-
-            <div class="card mb-4"><div class="card-body py-3">
-                <div class="filter-row">
-                    <input type="text" class="form-control" id="searchInput" placeholder="Search tickets by ID, title...">
-                    <select class="form-select" id="statusFilter">
-                        <option value="">All Statuses</option>
-                        <option value="open">Open</option>
-                        <option value="assigned">Assigned</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="closed">Closed</option>
-                    </select>
-                    <select class="form-select" id="priorityFilter">
-                        <option value="">All Priorities</option>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="critical">Critical</option>
-                    </select>
-                </div>
-            </div></div>
-
-            <div id="tickets" class="ticket-list"></div>
+            <!-- Holidays Section (Read-Only) -->
+            <div id="holidays-section" style="display:none">
+                <h4 class="mb-3 text-primary fw-bold">Holiday Calendar</h4>
+                <div class="card mb-5"><div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" style="vertical-align: middle;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Holiday Name</th>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody id="read-holiday-list">
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">Loading holidays...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div></div>
+            </div>
         </div>
     </div>
 </div>
@@ -319,17 +344,63 @@ document.getElementById('searchInput').addEventListener('input', filterTickets);
 document.getElementById('statusFilter').addEventListener('change', filterTickets);
 document.getElementById('priorityFilter').addEventListener('change', filterTickets);
 
-function checkHash() {
-    if (window.location.hash === '#raise' || new URLSearchParams(window.location.search).get('raise') === 'true') {
-        document.getElementById('modal-customer-name').value = localStorage.getItem('name') || localStorage.getItem('username') || '';
-        document.getElementById('modal-email').value = localStorage.getItem('email') || '';
-        document.getElementById('modal-mobile').value = localStorage.getItem('mobile') || '';
-        raiseModal.show();
-        history.replaceState(null, '', 'client.html');
+async function loadHolidaysReadOnly() {
+    try {
+        const el = document.getElementById('read-holiday-list');
+        if (!el) return;
+        const r = await API.getHolidaysPublic();
+        if (r.success) {
+            const list = r.holidays || r.items || r._raw || [];
+            if (!list.length) {
+                el.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">No holidays defined</td></tr>';
+                return;
+            }
+            list.sort((a,b) => new Date(a.date) - new Date(b.date));
+            el.innerHTML = list.map(h => `
+                <tr>
+                    <td class="fw-semibold">${h.name}</td>
+                    <td>${formatDate(h.date)}</td>
+                    <td><span class="badge bg-secondary" style="font-size:0.75rem;">${h.type}</span></td>
+                </tr>
+            `).join('');
+        }
+    } catch (e) {
+        console.error(e);
     }
 }
-window.addEventListener('hashchange', checkHash);
-window.addEventListener('load', checkHash);
+
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+function switchTab() {
+    const hash = window.location.hash;
+    const mainContent = document.getElementById('main-dashboard-content');
+    const holContent = document.getElementById('holidays-section');
+    if (hash === '#holidays') {
+        if (mainContent) mainContent.style.display = 'none';
+        if (holContent) holContent.style.display = 'block';
+        loadHolidaysReadOnly();
+    } else {
+        if (mainContent) mainContent.style.display = 'block';
+        if (holContent) holContent.style.display = 'none';
+        if (hash === '#raise' || new URLSearchParams(window.location.search).get('raise') === 'true') {
+            document.getElementById('modal-customer-name').value = localStorage.getItem('name') || localStorage.getItem('username') || '';
+            document.getElementById('modal-email').value = localStorage.getItem('email') || '';
+            document.getElementById('modal-mobile').value = localStorage.getItem('mobile') || '';
+            raiseModal.show();
+            history.replaceState(null, '', 'client.html');
+        }
+    }
+}
+window.addEventListener('hashchange', switchTab);
+window.addEventListener('load', switchTab);
 
 // Helper to read file as base64
 function readFileAsDataUrl(file) {
@@ -423,6 +494,7 @@ document.getElementById('modal-ticket-form').addEventListener('submit', async fu
 
 loadHolidayNotice();
 loadTickets();
+switchTab();
 </script>
 </body>
 </html>

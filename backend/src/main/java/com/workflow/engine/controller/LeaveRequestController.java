@@ -2,6 +2,7 @@ package com.workflow.engine.controller;
 
 import com.workflow.engine.entity.LeaveRequest;
 import com.workflow.engine.entity.User;
+import com.workflow.engine.entity.Ticket;
 import com.workflow.engine.repository.LeaveRequestRepository;
 import com.workflow.engine.repository.UserRepository;
 import com.workflow.engine.service.EmailService;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/leaves")
@@ -28,15 +30,21 @@ public class LeaveRequestController {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final EmailService emailService;
+    private final com.workflow.engine.repository.TicketRepository ticketRepository;
+    private final com.workflow.engine.service.AvailabilityScheduler availabilityScheduler;
 
     public LeaveRequestController(LeaveRequestRepository leaveRequestRepository,
                                   UserRepository userRepository,
                                   NotificationService notificationService,
-                                  EmailService emailService) {
+                                  EmailService emailService,
+                                  com.workflow.engine.repository.TicketRepository ticketRepository,
+                                  com.workflow.engine.service.AvailabilityScheduler availabilityScheduler) {
         this.leaveRequestRepository = leaveRequestRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.emailService = emailService;
+        this.ticketRepository = ticketRepository;
+        this.availabilityScheduler = availabilityScheduler;
     }
 
     private Optional<User> getCurrentUser() {
@@ -124,6 +132,21 @@ public class LeaveRequestController {
             userRepository.findById(request.getUserId()).ifPresent(staff -> {
                 staff.setAvailability("on_leave");
                 userRepository.save(staff);
+
+                // 1b. Check if the staff member has active tickets and notify admin
+                List<Ticket> activeTickets = ticketRepository.findByStatusNotIn(List.of("Resolved", "Closed")).stream()
+                        .filter(t -> staff.getUsername().equalsIgnoreCase(t.getAssignedTo()) ||
+                                     staff.getName().equalsIgnoreCase(t.getAssignedTo()))
+                        .collect(Collectors.toList());
+
+                if (!activeTickets.isEmpty()) {
+                    String listStr = activeTickets.stream()
+                            .map(t -> "#" + t.getId() + " (" + t.getTitle() + ")")
+                            .collect(Collectors.joining(", "));
+                    String title = "Reassignment Required: " + staff.getName();
+                    String msg = "Staff member " + staff.getName() + " is now on leave. The following active tickets require reassignment: " + listStr;
+                    notificationService.notifyAdmins(title, msg, "LEAVE_REASSIGN_TICKETS", request.getId());
+                }
 
                 // 2. Notify staff in-app
                 notificationService.createNotification(

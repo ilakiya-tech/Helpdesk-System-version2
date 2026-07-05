@@ -19,6 +19,9 @@ public class Comment {
 
     private String authorName;
 
+    @Column(name = "author_role")
+    private String authorRole;
+
     @Column(length = 2000)
     private String text;
 
@@ -66,5 +69,13 @@ public class Comment {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getAuthorRole() {
+        return authorRole;
+    }
+
+    public void setAuthorRole(String authorRole) {
+        this.authorRole = authorRole;
     }
 }

@@ -55,6 +55,8 @@ public class AuthControllerTest {
                 "1234567890",
                 "IT",
                 "Available",
+                null,
+                null,
                 null
         );
 
@@ -77,7 +79,9 @@ public class AuthControllerTest {
                 "0987654321",
                 "Management",
                 "Available",
-                adminSecretKey
+                adminSecretKey,
+                null,
+                null
         );
 
         mockMvc.perform(post("/api/users/register")
@@ -98,7 +102,9 @@ public class AuthControllerTest {
                 "0987654321",
                 "Management",
                 "Available",
-                "wrong-secret"
+                "wrong-secret",
+                null,
+                null
         );
 
         mockMvc.perform(post("/api/users/register")
@@ -121,6 +127,8 @@ public class AuthControllerTest {
                 "1234567890",
                 "Support",
                 "Available",
+                null,
+                null,
                 null
         );
         mockMvc.perform(post("/api/users/register")

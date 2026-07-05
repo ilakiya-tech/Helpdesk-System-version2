@@ -64,12 +64,7 @@
                     <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #0891b2"><h3 id="sla-avg-resolution" style="color:#0891b2;font-size:1.15rem">-</h3><p>Avg Resolution</p></div></div>
                 </div>
 
-                <div class="row g-2 mb-4 quick-links">
-                    <div class="col-auto"><a href="admin-users.html" class="btn btn-outline-primary btn-sm">User Management</a></div>
-                    <div class="col-auto"><a href="admin-staff.html" class="btn btn-outline-primary btn-sm">Staff Management</a></div>
-                    <div class="col-auto"><a href="admin-holidays.html" class="btn btn-outline-primary btn-sm">Holiday Management</a></div>
-                    <div class="col-auto"><a href="admin-report.html" class="btn btn-outline-primary btn-sm">Reports</a></div>
-                </div>
+
 
                 <div class="card mb-4">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
@@ -214,9 +209,13 @@
             return h + 'h ' + min + 'm';
         }
 
-        async function loadStaffDropdown() {
+        async function loadStaffDropdown(tickets) {
             const r = await API.getStaffList();
-            staffList = (r.staff || []).filter(s => s.availability === 'available');
+            const staff = r.staff || [];
+            staffList = staff.map(s => {
+                const activeCount = (tickets || []).filter(t => (t.assignedTo === s.username || t.assignedTo === s.name) && t.status !== 'Resolved' && t.status !== 'Closed').length;
+                return { ...s, activeCount };
+            }).filter(s => s.availability === 'available');
         }
 
         async function loadUpcomingHolidays() {
@@ -232,10 +231,10 @@
             try {
                 const tbody = document.getElementById('ticket-list');
                 UI.skeleton(tbody, 5, 9);
-                await loadStaffDropdown();
                 const result = await API.getTickets();
                 if (result.success) {
                     allTickets = result.tickets || [];
+                    await loadStaffDropdown(allTickets);
                     if (allTickets.length === 0) {
                         tbody.innerHTML = `
                             <tr>
@@ -430,7 +429,12 @@
         }
 
         function staffOptions() {
-            return staffList.map(s => `<option value="${s.userId}">${s.name} (${s.department || s.category || 'Staff'})</option>`).join('');
+            return staffList.map(s => {
+                const dept = s.department || s.category || 'General';
+                const statusLabel = 'Available';
+                const countText = `${s.activeCount} active ticket${s.activeCount === 1 ? '' : 's'}`;
+                return `<option value="${s.userId}">${s.name} (${dept}) - ${statusLabel} - ${countText}</option>`;
+            }).join('');
         }
 
         loadSummary();

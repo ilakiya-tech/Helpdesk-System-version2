@@ -15,6 +15,8 @@
 // separate GET endpoints for them.  getTicketHistory() and getComments()
 // both delegate to getTicketById() and extract the relevant sub-array.
 
+const syncChannel = new BroadcastChannel('carbochem_sync');
+
 const API = {
   baseURL: 'https://helpdesk-system-version2-1.onrender.com/api',
 
@@ -94,7 +96,7 @@ const API = {
     try {
       const resp = await fetch(`${this.baseURL}${path}`, opts);
 
-      if (resp.status === 401) {
+      if (resp.status === 401 && !path.startsWith('/auth/')) {
         localStorage.clear();
         sessionStorage.setItem('logoutMessage', 'Your session has expired. Please login again.');
         window.location.href = 'index.html';
@@ -110,6 +112,12 @@ const API = {
       // Treat non-2xx as failure
       if (!resp.ok && data && !Object.prototype.hasOwnProperty.call(data, 'success')) {
         data.success = false;
+      }
+
+      if (resp.ok && ['POST', 'PUT', 'DELETE'].includes(opts.method?.toUpperCase())) {
+        let type = 'DATA_MUTATION';
+        if (path.includes('/notifications')) type = 'NOTIFICATION_MUTATION';
+        syncChannel.postMessage({ type, path });
       }
 
       return data;
@@ -139,25 +147,20 @@ const API = {
   },
 
   // FIX MISMATCH 18: Forgot password — find user by username then PATCH password via PUT /users/{id}
-  async forgotPasswordByUsername(username, newPassword) {
-    try {
-      const usersResp = await this._fetch('/users', { headers: { 'Content-Type': 'application/json' } });
-      const users = usersResp.users || usersResp._raw || [];
-      const found = users.find(u => u.username === username);
-      if (!found) {
-        return { success: false, message: 'Username not found' };
-      }
-      const result = await this._fetch(`/users/${found.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...found, password: newPassword })
-      });
-      return result.success
-        ? { success: true, message: 'Password reset successfully' }
-        : { success: false, message: 'Failed to reset password' };
-    } catch (err) {
-      return { success: false, message: 'Reset failed: ' + err.message };
-    }
+  async forgotPassword(username) {
+    return this._fetch('/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+  },
+
+  async resetPassword(username, otp, newPassword) {
+    return this._fetch('/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, otp, newPassword })
+    });
   },
 
   async registerUser(username, password, role, extra = {}) {
@@ -403,14 +406,10 @@ const API = {
 
   // FIX MISMATCH 12: PUT /staff/{id}/availability does not exist — use PUT /users/{id}
   async updateStaffAvailability(staffId, availability) {
-    const usersResp = await this._fetch('/users', { headers: this._headers() });
-    const users = usersResp.users || [];
-    const user  = users.find(u => String(u.id) === String(staffId));
-    if (!user) return { success: false, message: 'User not found' };
-    return this._fetch(`/users/${staffId}`, {
+    return this._fetch(`/users/${staffId}/availability`, {
       method: 'PUT',
       headers: this._headers(),
-      body: JSON.stringify({ ...user, availability })
+      body: JSON.stringify({ availability })
     });
   },
 

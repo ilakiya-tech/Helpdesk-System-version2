@@ -3,7 +3,9 @@ package com.workflow.engine.service;
 import com.workflow.engine.config.AppConstants;
 import com.workflow.engine.config.SlaProperties;
 import com.workflow.engine.entity.Ticket;
+import com.workflow.engine.entity.User;
 import com.workflow.engine.repository.TicketRepository;
+import com.workflow.engine.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ public class TicketServiceTest {
 
     @Autowired
     private TicketRepository ticketRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @BeforeEach
     public void setUp() {
@@ -109,5 +114,28 @@ public class TicketServiceTest {
 
         Ticket swept = ticketRepository.findById(saved.getId()).orElseThrow();
         assertEquals(AppConstants.SLA_STATUS_BREACHED, swept.getSlaStatus());
+    }
+
+    @Test
+    public void testAssignTicketToUnavailableStaffThrowsException() {
+        // Create an unavailable staff user
+        User staff = new User();
+        staff.setUsername("StaffUnavailable");
+        staff.setPassword("password");
+        staff.setRole("staff");
+        staff.setName("Unavailable Staff");
+        staff.setAvailability("on_leave");
+        userRepository.save(staff);
+
+        Ticket ticket = new Ticket();
+        ticket.setTitle("SLA Test Ticket");
+        ticket.setPriority(AppConstants.PRIORITY_MEDIUM);
+        ticket.setStatus(AppConstants.STATUS_OPEN);
+        Ticket saved = ticketService.createTicket(ticket, "Customer");
+
+        // Try assigning to the unavailable staff member and assert exception is thrown
+        assertThrows(IllegalArgumentException.class, () -> {
+            ticketService.assignTicket(saved.getId(), "StaffUnavailable", "AdminAlice");
+        });
     }
 }

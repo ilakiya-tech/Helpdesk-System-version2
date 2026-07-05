@@ -549,6 +549,8 @@ window.UI = (() => {
     }
   }
 
+  const syncChannel = new BroadcastChannel('carbochem_sync');
+
   async function updateUnreadCount() {
     const badge = document.getElementById('nav-notifications-badge');
     if (!badge) return;
@@ -569,8 +571,32 @@ window.UI = (() => {
 
   function initNotifications() {
     updateUnreadCount();
-    // Poll count every 30 seconds
-    setInterval(updateUnreadCount, 30000);
+
+    // Listen to tab synchronization events
+    syncChannel.onmessage = (event) => {
+      console.log('Sync channel event:', event.data);
+      if (event.data.type === 'NOTIFICATION_MUTATION') {
+        updateUnreadCount();
+        if (notificationsDropdown && notificationsDropdown.style.display === 'flex') {
+          refreshNotificationsDropdown();
+        }
+      } else {
+        if (typeof window.loadTickets === 'function') window.loadTickets();
+        if (typeof window.loadLeaveRequests === 'function') window.loadLeaveRequests();
+        if (typeof window.loadAll === 'function') window.loadAll();
+        if (typeof window.loadUsers === 'function') window.loadUsers();
+        if (typeof window.loadHolidays === 'function') window.loadHolidays();
+        if (typeof window.loadSummary === 'function') window.loadSummary();
+        updateUnreadCount();
+      }
+    };
+
+    // Background-aware polling every 30 seconds
+    setInterval(() => {
+      if (!document.hidden) {
+        updateUnreadCount();
+      }
+    }, 30000);
   }
 
   // Auto-init notifications

@@ -210,21 +210,32 @@
             <!-- FORGOT PASSWORD PANEL -->
             <div id="forgot-panel" class="panel-hidden">
                 <h3 class="h5 fw-semibold mb-1">Reset Password</h3>
-                <p class="text-muted small mb-3">Enter your username and choose a new password</p>
+                <p class="text-muted small mb-3">Verify your email with a One-Time Password (OTP)</p>
                 <form id="forgot-form">
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-control" id="fp-username" required autocomplete="username" placeholder="Enter username">
+                    <div id="fp-step-1">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" id="fp-username" required autocomplete="username" placeholder="Enter your username">
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" id="fp-send-otp-btn">Send OTP Email</button>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="fp-password" required minlength="6" autocomplete="new-password" placeholder="New password">
+                    
+                    <div id="fp-step-2" class="panel-hidden">
+                        <div class="mb-3">
+                            <label class="form-label">Enter 6-Digit OTP</label>
+                            <input type="text" class="form-control" id="fp-otp" placeholder="Enter 6-digit code" maxlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="fp-password" minlength="6" autocomplete="new-password" placeholder="Min 6 characters">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="fp-confirm" minlength="6" autocomplete="new-password" placeholder="Repeat new password">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="fp-btn">Reset Password</button>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-control" id="fp-confirm" required minlength="6" autocomplete="new-password" placeholder="Confirm new password">
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100" id="fp-btn">Reset Password</button>
+
                     <div class="text-center mt-3"><a href="#" id="back-login" class="small text-decoration-none text-muted">← Back to Login</a></div>
                     <div id="forgot-feedback" class="alert mt-3 login-feedback" role="alert"></div>
                 </form>
@@ -291,6 +302,10 @@
             document.getElementById('login-panel').classList.remove('panel-hidden');
             document.querySelector('#modeTabs .nav-link[data-mode="login"]').classList.add('active');
             document.getElementById('forgot-form').reset();
+            document.getElementById('fp-step-1').classList.remove('panel-hidden');
+            document.getElementById('fp-step-2').classList.add('panel-hidden');
+            const fb = document.getElementById('forgot-feedback');
+            if (fb) fb.classList.remove('show');
         });
 
         function showButtonLoading(btn, isLoading, originalText = 'Submit', loadingText = 'Authenticating...') {
@@ -306,9 +321,11 @@
         document.getElementById('login-form').addEventListener('submit', async e => {
             e.preventDefault();
             const btn = document.getElementById('login-btn');
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
             showButtonLoading(btn, true, 'Login', 'Authenticating...');
             try {
-                const result = await API.login(document.getElementById('username').value, document.getElementById('password').value);
+                const result = await API.login(username, password);
                 if (result.success) {
                     let role = result.userRole || '';
                     if (role === 'consumer') role = 'client';
@@ -335,35 +352,75 @@
         document.getElementById('signup-form').addEventListener('submit', async e => {
             e.preventDefault();
             const suBtn = document.getElementById('su-btn');
-            const pw = document.getElementById('su-password').value;
-            const confirm = document.getElementById('su-confirm').value;
+            const username = document.getElementById('su-username').value.trim();
+            const pw = document.getElementById('su-password').value.trim();
+            const confirm = document.getElementById('su-confirm').value.trim();
             if (pw !== confirm) { showFeedback('signup-feedback', 'Passwords do not match', false); return; }
             showButtonLoading(suBtn, true, 'Create Admin Account', 'Registering...');
             const result = await API.registerAdmin({
-                name: document.getElementById('su-name').value,
-                email: document.getElementById('su-email').value,
-                username: document.getElementById('su-username').value,
+                name: document.getElementById('su-name').value.trim(),
+                email: document.getElementById('su-email').value.trim(),
+                username: username,
                 password: pw,
-                secretKey: document.getElementById('su-secret').value
+                secretKey: document.getElementById('su-secret').value.trim()
             });
             showButtonLoading(suBtn, false, 'Create Admin Account');
             if (result.success) {
                 showFeedback('signup-feedback', 'Admin account created! Redirecting to login...', true);
                 setTimeout(() => {
                     document.querySelector('#modeTabs .nav-link[data-mode="login"]').click();
-                    document.getElementById('username').value = document.getElementById('su-username').value;
+                    document.getElementById('username').value = username;
                 }, 1500);
             } else {
                 showFeedback('signup-feedback', result.message || 'Registration failed', false);
             }
         });
 
+        // Send OTP handler
+        document.getElementById('fp-send-otp-btn').addEventListener('click', async () => {
+            const usernameInput = document.getElementById('fp-username');
+            const username = usernameInput.value.trim();
+            if (!username) {
+                showFeedback('forgot-feedback', 'Please enter your username', false);
+                return;
+            }
+            const btn = document.getElementById('fp-send-otp-btn');
+            showButtonLoading(btn, true, 'Send OTP Email', 'Sending...');
+            try {
+                const result = await API.forgotPassword(username);
+                showButtonLoading(btn, false, 'Send OTP Email');
+                if (result.success) {
+                    showFeedback('forgot-feedback', result.message || 'OTP has been sent to your registered email', true);
+                    document.getElementById('fp-step-1').classList.add('panel-hidden');
+                    document.getElementById('fp-step-2').classList.remove('panel-hidden');
+                    document.getElementById('fp-otp').required = true;
+                    document.getElementById('fp-password').required = true;
+                    document.getElementById('fp-confirm').required = true;
+                } else {
+                    showFeedback('forgot-feedback', result.message || 'Failed to send OTP', false);
+                }
+            } catch (err) {
+                showButtonLoading(btn, false, 'Send OTP Email');
+                showFeedback('forgot-feedback', 'An error occurred. Please try again.', false);
+            }
+        });
+
+        // Submit Reset Password handler
         document.getElementById('forgot-form').addEventListener('submit', async e => {
             e.preventDefault();
+            if (document.getElementById('fp-step-2').classList.contains('panel-hidden')) {
+                return;
+            }
             const fpBtn = document.getElementById('fp-btn');
             const username = document.getElementById('fp-username').value.trim();
+            const otp = document.getElementById('fp-otp').value.trim();
             const pw = document.getElementById('fp-password').value;
             const confirm = document.getElementById('fp-confirm').value;
+
+            if (!otp) {
+                showFeedback('forgot-feedback', 'Please enter the OTP code', false);
+                return;
+            }
             if (pw !== confirm) {
                 showFeedback('forgot-feedback', 'Passwords do not match', false);
                 return;
@@ -372,14 +429,20 @@
                 showFeedback('forgot-feedback', 'Password must be at least 6 characters', false);
                 return;
             }
+
             showButtonLoading(fpBtn, true, 'Reset Password', 'Resetting...');
-            const result = await API.forgotPasswordByUsername(username, pw);
-            showButtonLoading(fpBtn, false, 'Reset Password');
-            if (result.success) {
-                showFeedback('forgot-feedback', 'Password reset successfully! Redirecting to login...', true);
-                setTimeout(() => document.getElementById('back-login').click(), 2000);
-            } else {
-                showFeedback('forgot-feedback', result.message || 'Reset failed', false);
+            try {
+                const result = await API.resetPassword(username, otp, pw);
+                showButtonLoading(fpBtn, false, 'Reset Password');
+                if (result.success) {
+                    showFeedback('forgot-feedback', 'Password reset successfully! Redirecting to login...', true);
+                    setTimeout(() => document.getElementById('back-login').click(), 2000);
+                } else {
+                    showFeedback('forgot-feedback', result.message || 'Reset failed', false);
+                }
+            } catch (err) {
+                showButtonLoading(fpBtn, false, 'Reset Password');
+                showFeedback('forgot-feedback', 'An error occurred. Please try again.', false);
             }
         });
     </script>

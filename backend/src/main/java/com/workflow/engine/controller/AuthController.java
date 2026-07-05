@@ -61,14 +61,17 @@ public class AuthController {
         @ApiResponse(responseCode = "401", description = "Invalid username or password")
     })
     public ResponseEntity<Map<String, Object>> login(@RequestBody @Valid LoginRequest request) {
+        String username = request.username() != null ? request.username().trim() : "";
+        String password = request.password() != null ? request.password().trim() : "";
+
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password())
+                new UsernamePasswordAuthenticationToken(username, password)
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.generateToken(authentication);
 
-        Optional<User> userOpt = userRepository.findByUsername(request.username());
+        Optional<User> userOpt = userRepository.findByUsername(username);
         User user = userOpt.get();
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -97,15 +100,18 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> register(@RequestBody @Valid RegisterRequest request) {
         Map<String, Object> response = new LinkedHashMap<>();
 
-        if (userRepository.existsByUsername(request.username())) {
+        String trimmedUsername = request.username() != null ? request.username().trim() : "";
+        String trimmedPassword = request.password() != null ? request.password().trim() : "";
+        String trimmedEmail = request.email() != null ? request.email().trim() : "";
+
+        if (userRepository.existsByUsername(trimmedUsername)) {
             response.put("success", false);
             response.put("message", "Username already taken");
             return ResponseEntity.status(409).body(response);
         }
 
         // Check for duplicate email (only if email is provided)
-        if (request.email() != null && !request.email().isBlank()
-                && userRepository.existsByEmail(request.email())) {
+        if (!trimmedEmail.isBlank() && userRepository.existsByEmail(trimmedEmail)) {
             response.put("success", false);
             response.put("message", "Email address is already registered");
             return ResponseEntity.status(409).body(response);
@@ -123,15 +129,18 @@ public class AuthController {
         }
 
         User user = new User(
-                request.username(),
-                passwordEncoder.encode(request.password()), // Hashed password
+                trimmedUsername,
+                passwordEncoder.encode(trimmedPassword), // Hashed password
                 role,
-                request.name(),
-                request.email(),
-                request.mobile(),
-                request.department(),
+                request.name() != null ? request.name().trim() : "",
+                trimmedEmail,
+                request.mobile() != null ? request.mobile().trim() : "",
+                request.department() != null ? request.department().trim() : "",
                 request.availability()
         );
+        user.setDesignation(request.designation());
+        user.setSpecialization(request.specialization());
+
         User saved = userRepository.save(user);
 
         if (saved.getEmail() != null && !saved.getEmail().isBlank()) {
@@ -145,6 +154,75 @@ public class AuthController {
         response.put("username", saved.getUsername());
         response.put("name",     saved.getName());
         response.put("userId",   saved.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/auth/forgot-password")
+    @Operation(summary = "Request password reset OTP", description = "Generates and sends a 6-digit OTP code to the user's email.")
+    public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody Map<String, String> payload) {
+        String username = payload.get("username");
+        if (username != null) username = username.trim();
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Username not found");
+            return ResponseEntity.status(404).body(response);
+        }
+
+        User user = userOpt.get();
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            response.put("success", false);
+            response.put("message", "No email registered for this user");
+            return ResponseEntity.status(400).body(response);
+        }
+
+        // Generate 6 digit OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
+        user.setOtpCode(otp);
+        user.setOtpExpiry(java.time.LocalDateTime.now().plusMinutes(10));
+        userRepository.save(user);
+
+        emailService.sendOtpEmail(user.getEmail(), user.getName(), otp);
+
+        response.put("success", true);
+        response.put("message", "OTP has been sent to your registered email");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/auth/reset-password")
+    @Operation(summary = "Reset password using OTP", description = "Verifies the OTP code and updates the password.")
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody Map<String, String> payload) {
+        String username = payload.get("username");
+        if (username != null) username = username.trim();
+        String otp = payload.get("otp");
+        if (otp != null) otp = otp.trim();
+        String newPassword = payload.get("newPassword");
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Username not found");
+            return ResponseEntity.status(404).body(response);
+        }
+
+        User user = userOpt.get();
+        if (user.getOtpCode() == null || !user.getOtpCode().equals(otp) ||
+                user.getOtpExpiry() == null || user.getOtpExpiry().isBefore(java.time.LocalDateTime.now())) {
+            response.put("success", false);
+            response.put("message", "Invalid or expired OTP");
+            return ResponseEntity.status(400).body(response);
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setOtpCode(null);
+        user.setOtpExpiry(null);
+        userRepository.save(user);
+
+        response.put("success", true);
+        response.put("message", "Password reset successfully");
         return ResponseEntity.ok(response);
     }
 }

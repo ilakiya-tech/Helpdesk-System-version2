@@ -7,10 +7,12 @@ import com.workflow.engine.dsa.TrieEngine;
 import com.workflow.engine.entity.ActivityHistory;
 import com.workflow.engine.entity.Comment;
 import com.workflow.engine.entity.Ticket;
+import com.workflow.engine.entity.User;
 import com.workflow.engine.exception.ResourceNotFoundException;
 import com.workflow.engine.repository.ActivityHistoryRepository;
 import com.workflow.engine.repository.CommentRepository;
 import com.workflow.engine.repository.TicketRepository;
+import com.workflow.engine.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -47,6 +49,7 @@ public class TicketService {
     private final TrieEngine trieEngine;
     private final SlaProperties slaProperties;
     private final com.workflow.engine.repository.AttachmentRepository attachmentRepository;
+    private final UserRepository userRepository;
 
     public TicketService(TicketRepository ticketRepository,
                           CommentRepository commentRepository,
@@ -54,7 +57,8 @@ public class TicketService {
                           MaxHeapEngine maxHeapEngine,
                           TrieEngine trieEngine,
                           SlaProperties slaProperties,
-                          com.workflow.engine.repository.AttachmentRepository attachmentRepository) {
+                          com.workflow.engine.repository.AttachmentRepository attachmentRepository,
+                          UserRepository userRepository) {
         this.ticketRepository = ticketRepository;
         this.commentRepository = commentRepository;
         this.activityHistoryRepository = activityHistoryRepository;
@@ -62,6 +66,7 @@ public class TicketService {
         this.trieEngine = trieEngine;
         this.slaProperties = slaProperties;
         this.attachmentRepository = attachmentRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -342,9 +347,27 @@ public class TicketService {
                     "Cannot assign a ticket with status: " + ticket.getStatus());
         }
 
-        // Idempotency: skip if same assignee and already assigned
-        if (assignee != null && assignee.equals(ticket.getAssignedTo())) {
-            return ticket;
+        // Prevent assigning a ticket to an unavailable staff member
+        if (assignee != null) {
+            Optional<User> staffOpt = userRepository.findByUsername(assignee);
+            if (staffOpt.isPresent()) {
+                User staff = staffOpt.get();
+                String avail = staff.getAvailability() != null ? staff.getAvailability() : "available";
+                if (!"available".equalsIgnoreCase(avail)) {
+                    throw new IllegalArgumentException("Staff member " + assignee + " is currently " + avail + " and cannot be assigned new tickets.");
+                }
+            } else {
+                List<User> listByName = userRepository.findAll().stream()
+                        .filter(u -> assignee.equalsIgnoreCase(u.getName()))
+                        .toList();
+                if (!listByName.isEmpty()) {
+                    User staff = listByName.get(0);
+                    String avail = staff.getAvailability() != null ? staff.getAvailability() : "available";
+                    if (!"available".equalsIgnoreCase(avail)) {
+                        throw new IllegalArgumentException("Staff member " + assignee + " is currently " + avail + " and cannot be assigned new tickets.");
+                    }
+                }
+            }
         }
 
         ticket.setAssignedTo(assignee);

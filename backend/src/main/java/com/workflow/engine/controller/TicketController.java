@@ -22,6 +22,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.List;
+import com.workflow.engine.entity.User;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -32,15 +34,21 @@ public class TicketController {
     private final com.workflow.engine.service.EmailService emailService;
     private final com.workflow.engine.service.NotificationService notificationService;
     private final com.workflow.engine.repository.UserRepository userRepository;
+    private final com.workflow.engine.repository.TicketRepository ticketRepository;
+    private final com.workflow.engine.repository.CommentRepository commentRepository;
 
     public TicketController(TicketService ticketService,
                             com.workflow.engine.service.EmailService emailService,
                             com.workflow.engine.service.NotificationService notificationService,
-                            com.workflow.engine.repository.UserRepository userRepository) {
+                            com.workflow.engine.repository.UserRepository userRepository,
+                            com.workflow.engine.repository.TicketRepository ticketRepository,
+                            com.workflow.engine.repository.CommentRepository commentRepository) {
         this.ticketService = ticketService;
         this.emailService = emailService;
         this.notificationService = notificationService;
         this.userRepository = userRepository;
+        this.ticketRepository = ticketRepository;
+        this.commentRepository = commentRepository;
     }
 
     @PostMapping
@@ -107,8 +115,19 @@ public class TicketController {
     })
     public ResponseEntity<Page<Ticket>> getAllTicketsSortedByPriority(
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) {
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false, defaultValue = "false") boolean active) {
         Pageable pageable = (page != null && size != null) ? PageRequest.of(page, size) : PageRequest.of(0, 10000);
+        if (!active) {
+            // Retrieve all tickets from database directly, sorted by id descending
+            List<Ticket> dbTickets = ticketRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id"));
+            int start = (int) pageable.getOffset();
+            int end = Math.min((start + pageable.getPageSize()), dbTickets.size());
+            if (start > dbTickets.size()) {
+                return ResponseEntity.ok(new org.springframework.data.domain.PageImpl<>(new java.util.ArrayList<>(), pageable, dbTickets.size()));
+            }
+            return ResponseEntity.ok(new org.springframework.data.domain.PageImpl<>(dbTickets.subList(start, end), pageable, dbTickets.size()));
+        }
         return ResponseEntity.ok(ticketService.getTicketsSortedByPriority(pageable));
     }
 
@@ -271,6 +290,39 @@ public class TicketController {
             @PathVariable Long id,
             @RequestBody @Valid CommentRequest request) {
         Comment saved = ticketService.addComment(id, request.authorName(), request.text());
+
+        // Resolve author role and set it on the comment record
+        String authorRole = userRepository.findByUsername(request.authorName())
+                .map(User::getRole)
+                .orElse("consumer");
+        saved.setAuthorRole(authorRole);
+        saved = commentRepository.save(saved);
+
+        // Generate in-app notifications
+        Ticket ticket = ticketRepository.findById(id).orElse(null);
+        if (ticket != null) {
+            String msg = request.authorName() + " (" + authorRole.toUpperCase() + ") commented on ticket #" + ticket.getId() + ": \"" + request.text() + "\"";
+            
+            // Notify customer (if they didn't write the comment)
+            if (!request.authorName().equalsIgnoreCase(ticket.getCustomerName())) {
+                userRepository.findByUsername(ticket.getCustomerName()).ifPresent(customer -> {
+                    notificationService.createNotification(customer.getId(), "New Comment Added", msg, "COMMENT_ADDED", ticket.getId());
+                });
+            }
+            
+            // Notify assigned staff member (if they didn't write the comment)
+            if (ticket.getAssignedTo() != null && !request.authorName().equalsIgnoreCase(ticket.getAssignedTo())) {
+                userRepository.findByUsername(ticket.getAssignedTo()).ifPresent(staff -> {
+                    notificationService.createNotification(staff.getId(), "New Comment Added", msg, "COMMENT_ADDED", ticket.getId());
+                });
+            }
+            
+            // Notify administrators (if the author is not an administrator)
+            if (!"admin".equalsIgnoreCase(authorRole)) {
+                notificationService.notifyAdmins("New Comment Added", msg, "COMMENT_ADDED", ticket.getId());
+            }
+        }
+
         return ResponseEntity.ok(saved);
     }
 }

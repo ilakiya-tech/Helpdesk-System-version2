@@ -9,8 +9,14 @@ const Sidebar = {
     { href: 'admin-holidays.html', label: 'Holidays' },
     { href: 'admin-report.html', label: 'Reports' },
   ],
-  staffLinks: [],
-  clientLinks: [],
+  staffLinks: [
+    { href: 'staff.html', label: 'Tickets' },
+    { href: 'staff.html#holidays', label: 'Holidays' }
+  ],
+  clientLinks: [
+    { href: 'client.html', label: 'Tickets' },
+    { href: 'client.html#holidays', label: 'Holidays' }
+  ],
 
   render(role, activePage) {
     const links = role === 'admin' ? this.adminLinks
