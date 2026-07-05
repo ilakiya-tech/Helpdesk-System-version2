@@ -14,31 +14,28 @@
         :root {
             --primary-color: #1F3373;
             --secondary-color: #2b479e;
-            --background-light: #f0f4f8;
-            --text-dark: #1f2937;
-            --text-gray: #4b5563;
+            --background-light: #f8fafc;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
             --white: #ffffff;
-            --border-color: #d1d5db;
+            --border-color: #e2e8f0;
         }
         body { font-family: 'Inter', sans-serif; background-color: var(--background-light); color: var(--text-dark); }
         .metric-card {
             background: var(--white);
-            border-radius: 12px;
+            border-radius: 10px;
             padding: 1.25rem 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             text-align: center;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             transition: all 0.2s;
         }
-        .metric-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .metric-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
         .metric-card .value { font-size: 2rem; font-weight: 700; margin: 0; }
         .metric-card .label { font-size: 0.85rem; color: var(--text-gray); margin: 0.25rem 0 0; }
-        .chart-container { background: var(--white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 1.5rem; border: 1px solid #e2e8f0; }
+        .chart-container { background: var(--white); border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 1.5rem; border: 1px solid var(--border-color); }
         .section-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-gray); margin-bottom: 0.75rem; }
-        .ticket-table { width: 100%; background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-collapse: separate; border-spacing: 0; border: 1px solid #e2e8f0; }
-        .ticket-table th { background: var(--background-light); color: var(--text-gray); font-weight: 600; padding: 0.85rem 1rem; font-size: .85rem; border-bottom: 1.5px solid #cbd5e1; }
-        .ticket-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); font-size: .875rem; vertical-align: middle; }
-        .sla-badge { display:inline-block; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600; color: #fff; }
+        .sla-badge { display:inline-block; padding: 2px 10px; border-radius: 4px; font-size: .75rem; font-weight: 600; color: #fff; }
         .sla-in     { background: #16a34a; }
         .sla-risk   { background: #ea580c; }
         .sla-breach { background: #dc2626; }
@@ -47,7 +44,7 @@
 </head>
 <body>
 <div class="d-flex layout-row layout-with-sidebar">
-    <aside id="sidebar-container"></aside>
+    <header id="sidebar-container"></header>
     <div class="flex-grow-1 main-content p-4">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h1 class="h4 fw-bold mb-0 text-primary">SLA Reports & Analytics</h1>
@@ -160,7 +157,7 @@
         <!-- Ticket Table -->
         <p class="section-title">All Tickets</p>
         <div class="table-responsive mb-4">
-            <table class="ticket-table table-hover">
+            <table class="table table-hover">
                 <thead>
                     <tr>
                         <th>#ID</th>
@@ -185,6 +182,7 @@
 <script src="../js/ui.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/sidebar.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     if (!requireAuth(['admin'])) throw new Error('auth');
     Sidebar.inject('admin', 'admin-report.html');
@@ -255,7 +253,7 @@
             data: {
                 labels: ['Open', 'In Progress', 'Resolved'],
                 datasets: [{ data: [sr.open || 0, sr.inProgress || 0, sr.resolved || 0],
-                    backgroundColor: ['#93c5fd','#fdba74','#86efac'], borderWidth: 2 }]
+                    backgroundColor: ['rgba(31, 51, 115, 0.2)','rgba(180, 83, 9, 0.2)','rgba(22, 101, 52, 0.2)'], borderWidth: 1 }]
             },
             options: { responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { position: 'right' } } }
@@ -272,7 +270,7 @@
                 datasets: [{
                     label: 'Tickets',
                     data: [bp.Critical || 0, bp.High || 0, bp.Medium || 0, bp.Low || 0],
-                    backgroundColor: ['#dc2626','#ea580c','#2563eb','#6b7280']
+                    backgroundColor: ['rgba(220, 38, 38, 0.2)','rgba(31, 51, 115, 0.2)','rgba(100, 116, 139, 0.2)','rgba(100, 116, 139, 0.1)']
                 }]
             },
             options: { responsive: true, maintainAspectRatio: false,
@@ -290,7 +288,7 @@
         tbody.innerHTML = tickets.map(t => `
             <tr>
                 <td>#${t.id}</td>
-                <td>${t.title}</td>
+                <td class="fw-semibold">${t.title}</td>
                 <td>${UI.priorityBadge(t.priority)}</td>
                 <td>${UI.statusBadge(t.status)}</td>
                 <td>${slaBadgeHtml(t.slaStatus)}</td>

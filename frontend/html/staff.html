@@ -11,161 +11,40 @@
     <style>
         :root {
             --primary-color: #1F3373;
-            --secondary-color: #2b479e;
-            --background-light: #f0f4f8;
-            --text-dark: #1f2937;
-            --text-gray: #4b5563;
-            --white: #ffffff;
-            --border-color: #d1d5db;
+            --background-light: #f8fafc;
+            --border-color: #e2e8f0;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            background-color: var(--background-light);
-            color: var(--text-dark);
-        }
-
-        .dashboard {
-            max-width: 1400px;
-            margin: 20px auto;
-            padding: 2rem;
-        }
-
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo {
-            height: 50px;
-            width: auto;
-        }
-
-        .company-name {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-
-        .ticket-filters {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .ticket-filters select,
-        .ticket-filters input {
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            flex-grow: 1;
-        }
-
-        .ticket-table {
-            width: 100%;
-            background-color: var(--white);
-            border-radius: 0.75rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            border-collapse: separate;
-            border-spacing: 0;
-            border: 1px solid #e2e8f0;
-        }
-
-        .ticket-table th {
-            background-color: var(--background-light);
-            color: var(--text-gray);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.875rem;
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1.5px solid #cbd5e1;
-        }
-
-        .ticket-table td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .view-details-btn {
-            background-color: var(--primary-color);
-            color: var(--white);
-            border: none;
-            border-radius: 0.375rem;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 550;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .view-details-btn:hover {
-            background-color: var(--secondary-color);
-        }
-
+        body { font-family: 'Inter', sans-serif; background: var(--background-light); margin: 0; }
+        .dashboard { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
         .staff-status-card {
-            background-color: var(--white);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             display: flex;
             align-items: center;
             justify-content: justify;
             gap: 2rem;
-            border: 1px solid #e2e8f0;
         }
-
         @media (max-width: 768px) {
-            .layout-row { flex-direction: column !important; }
-            .dashboard { padding: 1rem; }
             .staff-status-card { flex-direction: column; align-items: stretch; gap: 1rem; }
-            .ticket-filters { flex-direction: column; }
         }
     </style>
 </head>
 <body>
 <div class="d-flex layout-row layout-with-sidebar">
-    <aside id="sidebar-container"></aside>
-    <div class="flex-grow-1 main-content p-4">
-        
+    <header id="sidebar-container"></header>
+    <main class="flex-grow-1 main-content">
         <div class="dashboard">
-            <!-- Dashboard Header -->
-            <div class="dashboard-header">
-                <div class="logo-container">
-                    <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="100" height="100" fill="var(--primary-color)" />
-                        <text x="50" y="50" text-anchor="middle" dy=".3em" fill="white" font-size="40" font-weight="bold">CC</text>
-                    </svg>
-                    <span class="company-name">Carbochem</span>
-                </div>
-            </div>
-
-            <!-- Staff Status Card -->
-            <div class="staff-status-card">
+            <!-- Staff Status Card (Availability / Leave Status) -->
+            <div class="staff-status-card" id="availability">
                 <div>
                     <h5 class="mb-1 text-primary fw-bold" id="staff-name-display">Loading...</h5>
                     <p class="text-muted mb-0 small">Update your status to manage incoming ticket assignments</p>
                 </div>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="fw-semibold small text-secondary">My Availability:</span>
                     <span id="avail-badge-container"></span>
                     <select class="form-select form-select-sm ms-2" id="avail-select" style="width: auto;">
@@ -178,21 +57,30 @@
 
             <h4 class="mb-3 text-primary fw-bold">My Assigned Tickets</h4>
             
-            <!-- Filters -->
-            <div class="ticket-filters">
-                <input type="text" class="form-control" id="search-input" placeholder="Search by Ticket ID, title or customer...">
-                <select class="form-select" id="status-filter" style="max-width:200px">
-                    <option value="">All Statuses</option>
-                    <option value="assigned">Assigned</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="closed">Closed</option>
-                </select>
-            </div>
+            <!-- Compact Filters Row -->
+            <div class="card mb-4"><div class="card-body py-3">
+                <div class="filter-row">
+                    <input type="text" class="form-control" id="search-input" placeholder="Search by Ticket ID, title or customer...">
+                    <select class="form-select" id="status-filter" style="max-width: 260px;">
+                        <option value="">All Statuses</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                    <select class="form-select" id="priority-filter" style="max-width: 260px;">
+                        <option value="">All Priorities</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+            </div></div>
 
             <!-- Tickets Table -->
             <div class="table-responsive">
-                <table class="ticket-table table-hover">
+                <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>Ticket ID</th>
@@ -205,12 +93,12 @@
                         </tr>
                     </thead>
                     <tbody id="ticket-list">
-                        <!-- Loaded via API -->
+                        <!-- Loaded dynamically via API -->
                     </tbody>
                 </table>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 
     <script src="../js/api.js"></script>
@@ -221,7 +109,7 @@
     <script>
         if (!requireAuth(['staff'])) throw new Error('auth');
 
-        // Inject Sidebar
+        // Inject dynamic top navigation header
         Sidebar.inject('staff', 'staff.html');
 
         let allTickets = [];
@@ -284,7 +172,7 @@
                                 </td>
                             </tr>`;
                     } else {
-                        renderTickets(allTickets);
+                        filterTickets();
                     }
                 } else {
                     ticketList.innerHTML = `<tr><td colspan="7" class="text-danger text-center py-4">Failed to load tickets: ${result.message || 'Unknown error'}</td></tr>`;
@@ -311,7 +199,7 @@
             ticketList.innerHTML = '';
             
             if (filteredTickets.length === 0) {
-                ticketList.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No tickets found</td></tr>';
+                ticketList.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No tickets found matching current filters</td></tr>';
                 return;
             }
 
@@ -332,31 +220,31 @@
             });
         }
 
-        // Filter by status
-        document.getElementById('status-filter').addEventListener('change', (e) => {
-            const status = e.target.value;
-            const filteredTickets = status 
-                ? allTickets.filter(t => t.status.toLowerCase().replace(' ', '-') === status)
-                : allTickets;
-            renderTickets(filteredTickets);
-        });
+        function filterTickets() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            const status = document.getElementById('status-filter').value;
+            const priority = document.getElementById('priority-filter').value;
 
-        // Search functionality
-        document.getElementById('search-input').addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredTickets = allTickets.filter(t => 
-                (t.title && t.title.toLowerCase().includes(searchTerm)) ||
-                (t.id && t.id.toString().includes(searchTerm)) ||
-                (t.customerName && t.customerName.toLowerCase().includes(searchTerm))
-            );
-            renderTickets(filteredTickets);
-        });
+            const filtered = allTickets.filter(t => {
+                const matchesSearch = !searchTerm || 
+                                      (t.title && t.title.toLowerCase().includes(searchTerm)) ||
+                                      (t.id && t.id.toString().includes(searchTerm)) ||
+                                      (t.customerName && t.customerName.toLowerCase().includes(searchTerm));
+                const matchesStatus = !status || t.status.toLowerCase().replace(' ', '-') === status;
+                const matchesPriority = !priority || t.priority.toLowerCase() === priority;
+                return matchesSearch && matchesStatus && matchesPriority;
+            });
+            renderTickets(filtered);
+        }
+
+        document.getElementById('search-input').addEventListener('input', filterTickets);
+        document.getElementById('status-filter').addEventListener('change', filterTickets);
+        document.getElementById('priority-filter').addEventListener('change', filterTickets);
 
         function viewTicketDetails(ticketId) {
             window.location.href = `ticket-details.html?id=${ticketId}`;
         }
 
-        // Initial load
         loadAvailability();
         loadTickets();
     </script>

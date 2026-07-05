@@ -1,4 +1,4 @@
-// sidebar.js – Shared sidebar navigation for all dashboards
+// sidebar.js – Dynamic top horizontal navigation bar for all dashboards
 
 const Sidebar = {
   adminLinks: [
@@ -15,7 +15,7 @@ const Sidebar = {
   ],
   clientLinks: [
     { href: 'client.html', label: 'My Tickets', icon: '🎫' },
-    { href: 'create-ticket.html', label: 'Raise Ticket', icon: '➕' },
+    { href: 'client.html#raise', label: 'Raise Ticket', icon: '➕' },
   ],
 
   render(role, activePage) {
@@ -25,13 +25,13 @@ const Sidebar = {
     const username = localStorage.getItem('username') || '';
 
     return `
-      <div class="sidebar bg-primary text-white d-flex flex-column" id="app-sidebar">
+      <div class="sidebar text-white d-flex flex-row align-items-center justify-content-between" id="app-sidebar">
         <div class="sidebar-header">
           <div class="d-flex align-items-center gap-2">
             <div class="sidebar-logo">CC</div>
             <div>
-              <div class="fw-bold text-white">Carbochem</div>
-              <small class="opacity-75 text-white">${roleLabel} Portal</small>
+              <div class="fw-bold text-white" style="font-size:0.95rem; line-height: 1.1">Carbochem</div>
+              <small class="opacity-75 text-white" style="font-size:0.75rem">${roleLabel} Portal</small>
             </div>
           </div>
         </div>
@@ -43,8 +43,8 @@ const Sidebar = {
           }).join('')}
         </nav>
         <div class="sidebar-footer">
-          <small class="d-block opacity-75 mb-2 text-white">Logged in as <strong>${username}</strong></small>
-          <button class="btn btn-outline-light btn-sm w-100" onclick="logout()">Logout</button>
+          <small class="opacity-75 text-white d-none d-sm-inline">User: <strong>${username}</strong></small>
+          <button class="btn btn-outline-light btn-sm" style="padding: 4px 10px !important; font-size: 0.75rem !important; background: transparent !important; color: #fff !important; border-color: #fff !important;" onclick="logout()">Logout</button>
         </div>
       </div>`;
   },
@@ -54,7 +54,7 @@ const Sidebar = {
     if (el) {
       el.innerHTML = this.render(role, activePage);
       
-      // Update sidebar links to have the active class correctly highlighted
+      // Update links to have the active class correctly highlighted
       const updateActiveLink = () => {
         const currentFile = window.location.pathname.split('/').pop() || (role === 'admin' ? 'admin.html' : role === 'staff' ? 'staff.html' : 'client.html');
         const currentHash = window.location.hash;

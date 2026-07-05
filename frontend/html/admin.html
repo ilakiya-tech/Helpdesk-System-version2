@@ -12,211 +12,39 @@
         :root {
             --primary-color: #1F3373;
             --secondary-color: #2b479e;
-            --background-light: #f0f4f8;
-            --text-dark: #1f2937;
-            --text-gray: #4b5563;
+            --background-light: #f8fafc;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
             --white: #ffffff;
-            --border-color: #d1d5db;
+            --border-color: #e2e8f0;
         }
-		.logo-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo {
-            height: 50px;
-            width: auto;
-        }
-
-        .company-name {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--background-light);
-            color: var(--text-dark);
-        }
-
-        .navbar {
-            background-color: var(--primary-color);
-        }
-
-        .navbar .nav-link {
-            color: var(--white) !important;
-        }
-
-        .navbar .nav-link:hover {
-            color: var(--secondary-color) !important;
-        }
-
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .navbar-logo {
-            height: 32px;
-            width: auto;
-        }
-
-        .dashboard {
-            max-width: 1400px;
-            margin: 20px auto;
-            padding: 2rem;
-        }
-		
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-		.dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .filter-container {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .filter-container select,
-        .filter-container input {
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            flex-grow: 1;
-        }
-
-        .ticket-table {
-            width: 100%;
-            background-color: var(--white);
-            border-radius: 0.75rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border-collapse: separate;
-            border-spacing: 0;
-            border: 1px solid #e2e8f0;
-        }
-
-        .ticket-table th {
-            background-color: var(--background-light);
-            color: var(--text-gray);
-            font-weight: 600;
-            padding: 1rem;
-            text-align: left;
-            cursor: pointer;
-            border-bottom: 1.5px solid #cbd5e1;
-        }
-
-        .ticket-table th:hover {
-            background-color: #e2e8f0;
-        }
-
-        .ticket-table td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .ticket-status {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-open { background-color: #e6f2ff; color: #1e3a8a; }
-        .status-in-progress { background-color: #dbeafe; color: #1d4ed8; }
-        .status-resolved { background-color: #ddf4e4; color: #166534; }
-
-        .priority-critical { color: #dc2626; font-weight: bold; }
-        .priority-high { color: #ea580c; }
-        .priority-medium { color: #0369a1; }
-        .priority-low { color: #4b5563; }
-
-        .assign-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .assign-btn:hover {
-            background-color: var(--secondary-color);
-        }
-        
-        .staff-dropdown {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.25rem;
-        }
-        
-        .sort-icon {
-            display: inline-block;
-            margin-left: 5px;
-        }
-
-        .view-details-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 0.375rem 0.75rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-size: 0.8rem;
-            line-height: 1;
-        }
-
-        .view-details-btn:hover {
-            background-color: var(--secondary-color);
-        }
-
-        .sidebar { background: var(--primary-color) !important; min-height: 100vh; width: 240px; flex-shrink: 0; }
-        .sidebar-link { color: rgba(255,255,255,0.85); text-decoration: none; display: block; padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 2px; }
-        .sidebar-link:hover, .sidebar-link.active { background: rgba(255,255,255,0.2); color: #fff; }
-        .summary-card { background: var(--white); border-radius: 0.75rem; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; }
+        body { font-family: 'Inter', sans-serif; background: var(--background-light); margin: 0; }
+        .dashboard { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        .logo-container { display: flex; align-items: center; gap: 1rem; }
+        .logo { height: 40px; width: auto; }
+        .company-name { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
+        .summary-card { background: var(--white); border-radius: 10px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border-color); }
         .summary-card h3 { font-size: 2rem; color: var(--primary-color); margin: 0; }
         .summary-card p { color: var(--text-gray); margin: 0.25rem 0 0; font-size: 0.9rem; }
         .quick-links a { text-decoration: none; }
-        .badge-unassigned { position: relative; }
-        .badge-unassigned .badge { position: absolute; top: -8px; right: -12px; font-size: 0.65rem; }
-        @media (max-width:768px) { .layout-row { flex-direction: column !important; } .sidebar { width: 100% !important; min-height: auto !important; } }
     </style>
 </head>
 <body>
 <div class="d-flex layout-row layout-with-sidebar">
-    <aside id="sidebar-container"></aside>
-    <div class="flex-grow-1 main-content p-4">
-        
+    <header id="sidebar-container"></header>
+    <div class="flex-grow-1 main-content">
         <div class="dashboard">
-            <div class="dashboard-header">
+            <div class="dashboard-header d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                 <div class="logo-container">
                     <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="100" height="100" fill="var(--primary-color)" />
-                        <text x="50" y="50" text-anchor="middle" dy=".3em" fill="white" font-size="40" font-weight="bold">CC</text>
+                        <rect width="100" height="100" fill="var(--primary-color)" rx="10"/>
+                        <text x="50" y="55" text-anchor="middle" fill="white" font-size="36" font-weight="bold">CC</text>
                     </svg>
-                    <span class="company-name">Carbochem</span>
+                    <span class="company-name">Carbochem Admin</span>
                 </div>
             </div>
 
+            <!-- DASHBOARD SECTION -->
             <div id="dashboard-section">
                 <div class="row g-3 mb-4">
                     <div class="col-6 col-md-3"><div class="summary-card"><h3 id="stat-users">-</h3><p>Total Users</p></div></div>
@@ -232,8 +60,8 @@
                     <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #ea580c"><h3 id="sla-risk" style="color:#ea580c">-</h3><p>At Risk</p></div></div>
                     <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #dc2626"><h3 id="sla-breach" style="color:#dc2626">-</h3><p>Breached</p></div></div>
                     <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #2563eb"><h3 id="sla-resolved-ok" style="color:#2563eb">-</h3><p>Resolved Within SLA</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #7c3aed"><h3 id="sla-avg-response" style="color:#7c3aed;font-size:1.2rem">-</h3><p>Avg Response</p></div></div>
-                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #0891b2"><h3 id="sla-avg-resolution" style="color:#0891b2;font-size:1.2rem">-</h3><p>Avg Resolution</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #7c3aed"><h3 id="sla-avg-response" style="color:#7c3aed;font-size:1.15rem">-</h3><p>Avg Response</p></div></div>
+                    <div class="col-6 col-md-2"><div class="summary-card" style="border-top:3px solid #0891b2"><h3 id="sla-avg-resolution" style="color:#0891b2;font-size:1.15rem">-</h3><p>Avg Resolution</p></div></div>
                 </div>
 
                 <div class="row g-2 mb-4 quick-links">
@@ -251,7 +79,7 @@
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0" id="unassigned-tickets-table">
-                                <thead class="table-light">
+                                <thead>
                                     <tr>
                                         <th>Ticket ID</th>
                                         <th>Customer</th>
@@ -273,33 +101,37 @@
 
                 <div class="card mb-3">
                     <div class="card-body py-2">
-                        <h6 class="mb-2">Upcoming Holidays</h6>
+                        <h6 class="mb-2 text-primary fw-bold" style="font-size: 0.9rem;">Upcoming Holidays</h6>
                         <div id="upcoming-holidays" class="small text-muted">Loading...</div>
                     </div>
                 </div>
             </div>
 
+            <!-- TICKETS SECTION -->
             <div id="tickets-section" style="display:none">
-                <h4 class="mb-3 fw-bold">Tickets Log</h4>
-                <div class="filter-container">
-                    <input type="text" class="form-control" id="search-ticket" placeholder="Search by Ticket ID or Customer" oninput="filterTickets()">
-                    <select class="form-select" id="status-filter" onchange="filterTickets()">
-                        <option value="">All Statuses</option>
-                        <option value="open">Open</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="resolved">Resolved</option>
-                    </select>
-                    <select class="form-select" id="priority-filter" onchange="filterTickets()">
-                        <option value="">All Priorities</option>
-                        <option value="critical">Critical</option>
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
-                    </select>
-                </div>
+                <h4 class="mb-3 fw-bold text-primary">Tickets Log</h4>
+                
+                <div class="card mb-4"><div class="card-body py-3">
+                    <div class="filter-row">
+                        <input type="text" class="form-control" id="search-ticket" placeholder="Search by Ticket ID or Customer" oninput="filterTickets()">
+                        <select class="form-select" id="status-filter" onchange="filterTickets()">
+                            <option value="">All Statuses</option>
+                            <option value="open">Open</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                        <select class="form-select" id="priority-filter" onchange="filterTickets()">
+                            <option value="">All Priorities</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                </div></div>
 
                 <div class="table-responsive">
-                    <table class="ticket-table table-hover">
+                    <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th onclick="sortTable(0)">Ticket ID <span class="sort-icon"></span></th>
@@ -314,7 +146,7 @@
                             </tr>
                         </thead>
                         <tbody id="ticket-list">
-                            <!-- Tickets will load from API -->
+                            <!-- Loaded dynamically via API -->
                         </tbody>
                     </table>
                 </div>
@@ -331,7 +163,7 @@
     <script>
         if (!requireAuth(['admin'])) throw new Error('auth');
 
-        // Inject Sidebar
+        // Inject dynamic top navigation header
         Sidebar.inject('admin', 'admin.html');
 
         function switchTab() {
@@ -392,7 +224,7 @@
             const now = new Date();
             const upcoming = (r.holidays || []).filter(h => new Date(h.date) >= now).slice(0, 3);
             document.getElementById('upcoming-holidays').innerHTML = upcoming.length
-                ? upcoming.map(h => `<span class="badge bg-warning text-dark me-1">${new Date(h.date).toLocaleDateString()} – ${h.name}</span>`).join('')
+                ? upcoming.map(h => `<span class="badge bg-warning text-dark me-1" style="background-color:rgba(180,83,9,0.06) !important; color:#b45309 !important; border:1px solid rgba(180,83,9,0.12) !important;">${new Date(h.date).toLocaleDateString()} – ${h.name}</span>`).join('')
                 : 'No upcoming holidays';
         }
         
@@ -433,9 +265,7 @@
             tbody.innerHTML = '';
             
             tickets.forEach(ticket => {
-                const statusClass = ticket.status.toLowerCase().replace(' ', '-');
                 const priorityClass = `priority-${ticket.priority.toLowerCase()}`;
-                
                 const row = document.createElement('tr');
                 row.setAttribute('data-status', ticket.status.toLowerCase().replace(' ', '-'));
                 row.setAttribute('data-priority', ticket.priority.toLowerCase());
@@ -444,9 +274,9 @@
                 row.innerHTML = `
                     <td>#${ticket.id}</td>
                     <td>${ticket.customerName || 'N/A'}</td>
-                    <td>${ticket.title}</td>
+                    <td class="fw-semibold">${ticket.title}</td>
                     <td>${UI.statusBadge(ticket.status)}</td>
-                    <td class="${priorityClass} fw-semibold">${ticket.priority}</td>
+                    <td>${UI.priorityBadge(ticket.priority)}</td>
                     <td>${new Date(ticket.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
                     <td>
                         ${ticket.assignedTo ? ticket.assignedTo : `
@@ -495,17 +325,17 @@
         }
 
         function filterTickets() {
-            const searchInput = document.getElementById('search-ticket').value.toLowerCase();
+            const searchInput = document.getElementById('search-ticket').value.toLowerCase().trim();
             const statusFilter = document.getElementById('status-filter').value;
             const priorityFilter = document.getElementById('priority-filter').value;
 
             const filtered = allTickets.filter(ticket => {
-                const matchesSearch = ticket.id.toString().includes(searchInput) || 
+                const matchesSearch = !searchInput || 
+                                      ticket.id.toString().includes(searchInput) || 
                                       (ticket.title && ticket.title.toLowerCase().includes(searchInput)) ||
                                       (ticket.customerName && ticket.customerName.toLowerCase().includes(searchInput));
                 const matchesStatus = !statusFilter || ticket.status.toLowerCase().replace(' ', '-') === statusFilter;
                 const matchesPriority = !priorityFilter || ticket.priority.toLowerCase() === priorityFilter;
-                
                 return matchesSearch && matchesStatus && matchesPriority;
             });
             
@@ -575,14 +405,13 @@
             const sorted = [...unassigned].sort((a, b) => b.id - a.id).slice(0, 5);
             
             sorted.forEach(ticket => {
-                const priorityClass = `priority-${ticket.priority.toLowerCase()}`;
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>#${ticket.id}</td>
                     <td>${ticket.customerName || 'N/A'}</td>
-                    <td>${ticket.title}</td>
+                    <td class="fw-semibold">${ticket.title}</td>
                     <td>${new Date(ticket.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-                    <td class="${priorityClass} fw-semibold">${ticket.priority}</td>
+                    <td>${UI.priorityBadge(ticket.priority)}</td>
                     <td>
                         <button class="btn btn-sm btn-primary py-0" onclick="viewAndAssignTicket('${ticket.id}')">Assign</button>
                     </td>
@@ -604,7 +433,6 @@
             return staffList.map(s => `<option value="${s.userId}">${s.name} (${s.department || s.category || 'Staff'})</option>`).join('');
         }
 
-        // Load dashboard info
         loadSummary();
         loadUpcomingHolidays();
         loadTickets();

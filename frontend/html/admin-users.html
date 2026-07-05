@@ -9,56 +9,54 @@
     <link href="../css/sidebar.css" rel="stylesheet">
     <link href="../css/theme.css" rel="stylesheet">
     <style>
-        :root { --primary-color: #1F3373; --background-light: #f0f4f8; }
+        :root { --primary-color: #1F3373; --background-light: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--background-light); margin: 0; }
-        .main-content { flex: 1; padding: 1.5rem; overflow-x: auto; }
-        .card-table { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #e2e8f0; }
+        .main-content { flex: 1; padding: 1.5rem; }
         .error-feedback { color: #dc2626; font-size: 0.8rem; margin-top: 4px; display: none; }
-        @media (max-width:768px) { .layout-row { flex-direction: column !important; } }
     </style>
 </head>
 <body>
 <div class="d-flex layout-row layout-with-sidebar">
-    <aside id="sidebar-container"></aside>
+    <header id="sidebar-container"></header>
     <main class="main-content">
         <h2 class="mb-4 text-primary fw-bold">User Management</h2>
         <div class="card mb-4"><div class="card-body">
-            <h5 class="card-title fw-bold text-primary mb-3">Create New User</h5>
+            <h5 class="card-title fw-bold text-primary mb-3" style="font-size: 1rem;">Create New User</h5>
             <form id="create-user-form" class="row g-3" novalidate>
                 <div class="col-md-6">
-                    <label class="form-label small fw-semibold text-secondary">Full Name</label>
+                    <label class="form-label">Full Name</label>
                     <input type="text" class="form-control" id="u-name" required placeholder="e.g. John Doe">
                     <div class="error-feedback" id="name-error">Please enter full name</div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label small fw-semibold text-secondary">Email</label>
+                    <label class="form-label">Email</label>
                     <input type="email" class="form-control" id="u-email" required placeholder="e.g. john@carbochem.com">
                     <div class="error-feedback" id="email-error">Please enter a valid email</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small fw-semibold text-secondary">Username</label>
+                    <label class="form-label">Username</label>
                     <input type="text" class="form-control" id="u-username" required placeholder="Enter username">
                     <div class="error-feedback" id="username-error">Username is required</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small fw-semibold text-secondary">Password</label>
+                    <label class="form-label">Password</label>
                     <input type="password" class="form-control" id="u-password" required minlength="6" placeholder="Min 6 characters">
                     <div class="error-feedback" id="password-error">Password must be at least 6 characters</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small fw-semibold text-secondary">Role</label>
+                    <label class="form-label">Role</label>
                     <select class="form-select" id="u-role" required>
                         <option value="staff">Staff</option>
                         <option value="client">Consumer</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small fw-semibold text-secondary">Phone</label>
+                    <label class="form-label">Phone</label>
                     <input type="tel" class="form-control" id="u-phone" placeholder="e.g. 9876543210">
                     <div class="error-feedback" id="phone-error">Phone must be exactly 10 digits</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small fw-semibold text-secondary">Department</label>
+                    <label class="form-label">Department</label>
                     <input type="text" class="form-control" id="u-dept" placeholder="e.g. Sales / Production">
                 </div>
                 <div class="col-12 mt-4">
@@ -67,9 +65,9 @@
             </form>
         </div></div>
         
-        <div class="card-table table-responsive">
+        <div class="table-responsive">
             <table class="table table-hover mb-0">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Name</th>
                         <th>Username</th>
@@ -93,6 +91,7 @@
 <script src="../js/ui.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/sidebar.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 if (!requireAuth(['admin'])) throw new Error('auth');
 Sidebar.inject('admin', 'admin-users.html');
@@ -121,7 +120,7 @@ async function loadUsers() {
             <td>${UI.roleBadge(u.role)}</td>
             <td>${u.email || '-'}</td>
             <td>${u.mobile || '-'}</td>
-            <td><span class="badge bg-success">Active</span></td>
+            <td><span class="badge bg-success" style="background-color:rgba(22,101,52,0.05) !important; color:#166534 !important; border:1px solid rgba(22,101,52,0.12) !important; font-size:0.75rem;">Active</span></td>
             <td>
                 <button class="btn btn-sm btn-outline-primary" style="background:transparent !important; color:var(--primary-color) !important" onclick="resetPw('${u.id}', this)">Reset PW</button>
             </td>
@@ -170,7 +169,6 @@ document.getElementById('create-user-form').addEventListener('submit', async e =
     
     if (!isValid) return;
     
-    // Duplicate check
     const dup = UI.checkDuplicateUser(allUsers, { username, email });
     if (!dup.ok) {
         UI.toast('warning', 'Duplicate Registration', dup.message);

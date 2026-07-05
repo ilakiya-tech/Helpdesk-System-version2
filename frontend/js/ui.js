@@ -233,57 +233,57 @@ window.UI = (() => {
   // ── Status badge helper ────────────────────────────────────────────────────
   function statusBadge(status) {
     const map = {
-      'Open':        { bg:'#e0f2fe', color:'#0369a1', border:'#bae6fd' },
-      'Assigned':    { bg:'#f3e8ff', color:'#6b21a8', border:'#e9d5ff' },
-      'In Progress': { bg:'#fef3c7', color:'#92400e', border:'#fcd34d' },
-      'Resolved':    { bg:'#d1fae5', color:'#065f46', border:'#6ee7b7' },
-      'Closed':      { bg:'#f3f4f6', color:'#374151', border:'#d1d5db' },
+      'Open':        { bg:'rgba(31, 51, 115, 0.05)', color:'#1F3373', border:'rgba(31, 51, 115, 0.1)' },
+      'Assigned':    { bg:'rgba(31, 51, 115, 0.06)', color:'#1F3373', border:'rgba(31, 51, 115, 0.12)' },
+      'In Progress': { bg:'rgba(180, 83, 9, 0.06)', color:'#b45309', border:'rgba(180, 83, 9, 0.12)' },
+      'Resolved':    { bg:'rgba(22, 101, 52, 0.06)', color:'#166534', border:'rgba(22, 101, 52, 0.12)' },
+      'Closed':      { bg:'rgba(100, 116, 139, 0.06)', color:'#64748b', border:'rgba(100, 116, 139, 0.12)' },
     };
-    const c = map[status] || { bg:'#f3f4f6', color:'#374151', border:'#d1d5db' };
-    return `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
+    const c = map[status] || { bg:'rgba(100, 116, 139, 0.06)', color:'#64748b', border:'rgba(100, 116, 139, 0.12)' };
+    return `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;
       background:${c.bg};color:${c.color};border:1px solid ${c.border};
-      font-size:.75rem;font-weight:600;letter-spacing:.02em;white-space:nowrap">${status}</span>`;
+      font-size:.75rem;font-weight:600;white-space:nowrap">${status}</span>`;
   }
 
   function priorityBadge(priority) {
     const map = {
-      'Critical': { bg:'#fee2e2', color:'#991b1b', border:'#fca5a5' },
-      'High':     { bg:'#ffedd5', color:'#9a3412', border:'#fdba74' },
-      'Medium':   { bg:'#fef9c3', color:'#854d0e', border:'#fde68a' },
-      'Low':      { bg:'#dcfce7', color:'#166534', border:'#86efac' },
+      'Critical': { bg:'rgba(220, 38, 38, 0.06)', color:'#dc2626', border:'rgba(220, 38, 38, 0.12)' },
+      'High':     { bg:'rgba(31, 51, 115, 0.06)', color:'#1F3373', border:'rgba(31, 51, 115, 0.12)' },
+      'Medium':   { bg:'rgba(100, 116, 139, 0.06)', color:'#64748b', border:'rgba(100, 116, 139, 0.12)' },
+      'Low':      { bg:'rgba(100, 116, 139, 0.04)', color:'#64748b', border:'rgba(100, 116, 139, 0.08)' },
     };
-    const c = map[priority] || { bg:'#f3f4f6', color:'#374151', border:'#d1d5db' };
-    return `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
+    const c = map[priority] || { bg:'rgba(100, 116, 139, 0.04)', color:'#64748b', border:'rgba(100, 116, 139, 0.08)' };
+    return `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;
       background:${c.bg};color:${c.color};border:1px solid ${c.border};
-      font-size:.75rem;font-weight:600;letter-spacing:.02em;white-space:nowrap">${priority || 'Low'}</span>`;
+      font-size:.75rem;font-weight:600;white-space:nowrap">${priority || 'Low'}</span>`;
   }
 
   function availBadge(avail) {
     const a = (avail || '').toLowerCase();
     const map = {
-      'available':  { bg:'#d1fae5', color:'#065f46', border:'#6ee7b7', label:'Available' },
-      'busy':       { bg:'#fef3c7', color:'#92400e', border:'#fcd34d', label:'Busy' },
-      'on_leave':   { bg:'#fee2e2', color:'#991b1b', border:'#fca5a5', label:'On Leave' },
-      'on leave':   { bg:'#fee2e2', color:'#991b1b', border:'#fca5a5', label:'On Leave' },
+      'available':  { bg:'rgba(22, 101, 52, 0.05)', color:'#166534', border:'rgba(22, 101, 52, 0.1)', label:'Available' },
+      'busy':       { bg:'rgba(180, 83, 9, 0.06)', color:'#b45309', border:'rgba(180, 83, 9, 0.12)', label:'Busy' },
+      'on_leave':   { bg:'rgba(220, 38, 38, 0.05)', color:'#dc2626', border:'rgba(220, 38, 38, 0.1)', label:'On Leave' },
+      'on leave':   { bg:'rgba(220, 38, 38, 0.05)', color:'#dc2626', border:'rgba(220, 38, 38, 0.1)', label:'On Leave' },
     };
-    const c = map[a] || { bg:'#f3f4f6', color:'#374151', border:'#d1d5db', label: avail || 'Unknown' };
-    return `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
+    const c = map[a] || { bg:'rgba(100, 116, 139, 0.06)', color:'#64748b', border:'rgba(100, 116, 139, 0.12)', label: avail || 'Unknown' };
+    return `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;
       background:${c.bg};color:${c.color};border:1px solid ${c.border};
-      font-size:.75rem;font-weight:600;letter-spacing:.02em;white-space:nowrap">${c.label}</span>`;
+      font-size:.75rem;font-weight:600;white-space:nowrap">${c.label}</span>`;
   }
 
   function roleBadge(role) {
     const map = {
-      'admin':    { bg:'#fce7f3', color:'#9d174d', border:'#f9a8d4' },
-      'staff':    { bg:'#dbeafe', color:'#1e40af', border:'#93c5fd' },
-      'consumer': { bg:'#d1fae5', color:'#065f46', border:'#6ee7b7' },
+      'admin':    { bg:'rgba(31, 51, 115, 0.06)', color:'#1F3373', border:'rgba(31, 51, 115, 0.12)' },
+      'staff':    { bg:'rgba(31, 51, 115, 0.05)', color:'#1F3373', border:'rgba(31, 51, 115, 0.1)' },
+      'consumer': { bg:'rgba(100, 116, 139, 0.06)', color:'#64748b', border:'rgba(100, 116, 139, 0.12)' },
     };
     const r = (role||'').toLowerCase();
-    const c = map[r] || { bg:'#f3f4f6', color:'#374151', border:'#d1d5db' };
+    const c = map[r] || { bg:'rgba(100, 116, 139, 0.06)', color:'#64748b', border:'rgba(100, 116, 139, 0.12)' };
     const label = r.charAt(0).toUpperCase() + r.slice(1);
-    return `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
+    return `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;
       background:${c.bg};color:${c.color};border:1px solid ${c.border};
-      font-size:.75rem;font-weight:600;letter-spacing:.02em;white-space:nowrap">${label}</span>`;
+      font-size:.75rem;font-weight:600;white-space:nowrap">${label}</span>`;
   }
 
   function emptyState(message = 'No records found', icon = '📋') {
