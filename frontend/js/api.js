@@ -364,6 +364,21 @@ const API = {
     });
   },
 
+  async updateUser(userId, data) {
+    return this._fetch(`/users/${userId}`, {
+      method: 'PUT',
+      headers: this._headers(),
+      body: JSON.stringify(data)
+    });
+  },
+
+  async deleteUser(userId) {
+    return this._fetch(`/users/${userId}`, {
+      method: 'DELETE',
+      headers: this._headers()
+    });
+  },
+
   // FIX MISMATCH 16: PUT /users/{id}/status does not exist — use PUT /users/{id}
   async updateUserStatus(userId, isActive) {
     const usersResp = await this._fetch('/users', { headers: this._headers() });

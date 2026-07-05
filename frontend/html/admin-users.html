@@ -21,8 +21,12 @@
     <main class="main-content">
         <h2 class="mb-4 text-primary fw-bold">User Management</h2>
         <div class="card mb-4"><div class="card-body">
-            <h5 class="card-title fw-bold text-primary mb-3" style="font-size: 1rem;">Create New User</h5>
+            <h5 class="card-title fw-bold text-primary mb-3" id="form-title" style="font-size: 1rem;">Create New User</h5>
             <form id="create-user-form" class="row g-3" novalidate>
+                <!-- Section 1: Basic Information -->
+                <div class="col-12">
+                    <h6 class="text-secondary fw-semibold border-bottom pb-2">Basic Information</h6>
+                </div>
                 <div class="col-md-6">
                     <label class="form-label">Full Name</label>
                     <input type="text" class="form-control" id="u-name" required placeholder="e.g. John Doe">
@@ -39,7 +43,7 @@
                     <div class="error-feedback" id="username-error">Username is required</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Password</label>
+                    <label class="form-label" id="lbl-password">Password</label>
                     <input type="password" class="form-control" id="u-password" required minlength="6" placeholder="Min 6 characters">
                     <div class="error-feedback" id="password-error">Password must be at least 6 characters</div>
                 </div>
@@ -55,6 +59,11 @@
                     <input type="tel" class="form-control" id="u-phone" placeholder="e.g. 9876543210">
                     <div class="error-feedback" id="phone-error">Phone must be exactly 10 digits</div>
                 </div>
+
+                <!-- Section 2: Staff Information -->
+                <div class="col-12" id="staff-section-header">
+                    <h6 class="text-secondary fw-semibold border-bottom pb-2 mt-3">Staff Information</h6>
+                </div>
                 <div class="col-md-4" id="div-dept">
                     <label class="form-label">Department</label>
                     <input type="text" class="form-control" id="u-dept" placeholder="e.g. Sales / Production">
@@ -67,8 +76,10 @@
                     <label class="form-label">Specialization</label>
                     <input type="text" class="form-control" id="u-specialization" placeholder="e.g. Concrete Additives (Optional)">
                 </div>
-                <div class="col-12 mt-4">
+
+                <div class="col-12 mt-4 d-flex gap-2">
                     <button type="submit" class="btn btn-primary" id="create-user-btn">Create User</button>
+                    <button type="button" class="btn btn-outline-secondary" id="cancel-edit-btn" style="display: none;">Cancel</button>
                 </div>
             </form>
         </div></div>
@@ -105,6 +116,7 @@ if (!requireAuth(['admin'])) throw new Error('auth');
 Sidebar.inject('admin', 'admin-users.html');
 
 let allUsers = [];
+let editUserId = null;
 
 async function loadUsers() {
     const tbody = document.getElementById('users-table');
@@ -130,9 +142,66 @@ async function loadUsers() {
             <td>${u.mobile || '-'}</td>
             <td><span class="badge bg-success" style="background-color:rgba(22,101,52,0.05) !important; color:#166534 !important; border:1px solid rgba(22,101,52,0.12) !important; font-size:0.75rem;">Active</span></td>
             <td>
-                <button class="btn btn-sm btn-outline-primary" style="background:transparent !important; color:var(--primary-color) !important" onclick="resetPw('${u.id}', this)">Reset PW</button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" style="background:transparent !important; color:var(--primary-color) !important" onclick="startEdit('${u.id}')">Edit</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="resetPw('${u.id}', this)">Reset PW</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${u.id}', this)">Delete</button>
+                </div>
             </td>
         </tr>`).join('');
+}
+
+function startEdit(id) {
+    const user = allUsers.find(u => String(u.id) === String(id));
+    if (!user) return;
+    
+    editUserId = id;
+    document.getElementById('form-title').textContent = 'Edit User';
+    document.getElementById('create-user-btn').textContent = 'Save Changes';
+    document.getElementById('cancel-edit-btn').style.display = 'inline-block';
+    
+    // Populate fields
+    document.getElementById('u-name').value = user.name || '';
+    document.getElementById('u-email').value = user.email || '';
+    document.getElementById('u-username').value = user.username || '';
+    document.getElementById('u-password').value = ''; // leave blank if no password change
+    document.getElementById('lbl-password').textContent = 'Password (leave blank to keep current)';
+    document.getElementById('u-role').value = user.role || 'client';
+    document.getElementById('u-phone').value = user.mobile || '';
+    
+    // Trigger role switch
+    document.getElementById('u-role').dispatchEvent(new Event('change'));
+    
+    if (user.role === 'staff') {
+        document.getElementById('u-dept').value = user.department || '';
+        document.getElementById('u-designation').value = user.designation || '';
+        document.getElementById('u-specialization').value = user.specialization || '';
+    }
+}
+
+function cancelEdit() {
+    editUserId = null;
+    document.getElementById('form-title').textContent = 'Create New User';
+    document.getElementById('create-user-btn').textContent = 'Create User';
+    document.getElementById('cancel-edit-btn').style.display = 'none';
+    document.getElementById('lbl-password').textContent = 'Password';
+    document.getElementById('create-user-form').reset();
+    document.getElementById('u-role').dispatchEvent(new Event('change'));
+}
+
+async function deleteUser(id) {
+    const ok = await UI.confirm('Are you sure you want to permanently delete this user account?');
+    if (!ok) return;
+    
+    await UI.blockDuplicate('delete-' + id, async () => {
+        const r = await API.deleteUser(id);
+        if (r.success || r.status === 204 || r.success !== false) {
+            UI.toast('success', 'Deleted', 'User account deleted successfully!');
+            loadUsers();
+        } else {
+            UI.toast('error', 'Error', r.message || 'Failed to delete user');
+        }
+    });
 }
 
 async function resetPw(id, btn) {
@@ -165,62 +234,85 @@ document.getElementById('create-user-form').addEventListener('submit', async e =
     const password = document.getElementById('u-password').value;
     const role = document.getElementById('u-role').value;
     const phone = document.getElementById('u-phone').value.trim();
-    const department = document.getElementById('u-dept').value.trim();
     
     let isValid = true;
     
     if (!name) { document.getElementById('name-error').style.display = 'block'; isValid = false; }
     if (!UI.validateEmail(email)) { document.getElementById('email-error').style.display = 'block'; isValid = false; }
     if (!username) { document.getElementById('username-error').style.display = 'block'; isValid = false; }
-    if (!UI.validatePassword(password)) { document.getElementById('password-error').style.display = 'block'; isValid = false; }
+    
+    // Only validate password length if creating OR if password is filled in edit mode
+    if (!editUserId || password.length > 0) {
+        if (!UI.validatePassword(password)) { document.getElementById('password-error').style.display = 'block'; isValid = false; }
+    }
     if (phone && !UI.validatePhone(phone)) { document.getElementById('phone-error').style.display = 'block'; isValid = false; }
     
     if (!isValid) return;
     
-    const dup = UI.checkDuplicateUser(allUsers, { username, email });
+    // Validate duplicate check (exclude current user being edited)
+    const otherUsers = allUsers.filter(u => String(u.id) !== String(editUserId));
+    const dup = UI.checkDuplicateUser(otherUsers, { username, email });
     if (!dup.ok) {
         UI.toast('warning', 'Duplicate Registration', dup.message);
         return;
     }
     
     const btn = document.getElementById('create-user-btn');
-    await UI.blockDuplicate('create-user', async () => {
-        UI.setLoading(btn, true, 'Creating…');
+    await UI.blockDuplicate('user-mutate', async () => {
+        UI.setLoading(btn, true, editUserId ? 'Saving…' : 'Creating…');
         const payload = {
             name,
             email,
             username,
-            password,
             role,
             mobile: phone
         };
+        // Keep password out of payload if left blank during edit
+        if (password) {
+            payload.password = password;
+        }
+        
         if (role === 'staff') {
-            payload.department = department;
+            payload.department = document.getElementById('u-dept').value.trim();
             payload.designation = document.getElementById('u-designation').value.trim();
             payload.specialization = document.getElementById('u-specialization').value.trim();
+        } else {
+            // Guarantee staff-only fields are hidden and not submitted
+            payload.department = null;
+            payload.designation = null;
+            payload.specialization = null;
         }
-        const r = await API.createUser(payload);
+        
+        let r;
+        if (editUserId) {
+            r = await API.updateUser(editUserId, payload);
+        } else {
+            r = await API.createUser(payload);
+        }
+        
         UI.setLoading(btn, false);
-        if (r.success) {
-            UI.toast('success', 'Success', 'User created successfully!');
-            e.target.reset();
+        if (r.success || (editUserId && r.id)) {
+            UI.toast('success', 'Success', editUserId ? 'User details updated successfully!' : 'User created successfully!');
+            cancelEdit();
             loadUsers();
         } else {
-            UI.toast('error', 'Error', r.message || 'Failed to create user');
+            UI.toast('error', 'Error', r.message || 'Failed to complete operation');
         }
     });
 });
 
+document.getElementById('cancel-edit-btn').addEventListener('click', cancelEdit);
+
 document.getElementById('u-role').addEventListener('change', () => {
     const role = document.getElementById('u-role').value;
     const isStaff = (role === 'staff');
+    document.getElementById('staff-section-header').style.display = isStaff ? 'block' : 'none';
     document.getElementById('div-dept').style.display = isStaff ? 'block' : 'none';
     document.getElementById('div-designation').style.display = isStaff ? 'block' : 'none';
     document.getElementById('div-specialization').style.display = isStaff ? 'block' : 'none';
 });
 // Trigger role change initially on load
 document.getElementById('u-role').dispatchEvent(new Event('change'));
-
 loadUsers();
 </script>
 </body>
