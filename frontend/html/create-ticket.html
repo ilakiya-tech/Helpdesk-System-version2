@@ -259,17 +259,14 @@
   </div>
 
   <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
   <script src="../js/auth.js"></script>
   <script>
-    // Check authentication – consumers only
-    if (!localStorage.getItem('token') || localStorage.getItem('userRole') !== 'client') {
-      window.location.href = 'index.html';
-    }
+    if (!requireAuth(['consumer'])) throw new Error('auth');
 
-    // Pre-populate fields from logged-in user profile with fallbacks
     document.getElementById('customer-name').value = localStorage.getItem('name') || localStorage.getItem('username') || 'Consumer';
     document.getElementById('email').value = localStorage.getItem('email') || (localStorage.getItem('username') + '@carbochem.com');
-    document.getElementById('mobile').value = localStorage.getItem('mobile') || '1234567890';
+    document.getElementById('mobile').value = localStorage.getItem('mobile') || '';
 
     const ticketForm = document.getElementById('ticket-form');
     const submitButton = document.querySelector('.submit-button');
@@ -278,100 +275,59 @@
       e.preventDefault();
 
       const customerName = document.getElementById('customer-name').value;
-      const issueTitle = document.getElementById('issue-title').value;
-      const description = document.getElementById('description').value;
+      const issueTitle = document.getElementById('issue-title').value.trim();
+      const description = document.getElementById('description').value.trim();
       const category = document.getElementById('category').value;
       const priority = document.getElementById('priority').value;
-      const email = document.getElementById('email').value;
-      const mobile = document.getElementById('mobile').value;
+      const email = document.getElementById('email').value.trim();
+      const mobile = document.getElementById('mobile').value.trim();
 
+      document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
       let isValid = true;
 
-      // Hide all error messages
-      document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
-
-      // Validate form
-      if (!customerName.trim()) {
-        document.getElementById('name-error').style.display = 'block';
-        isValid = false;
+      if (!issueTitle) { document.getElementById('title-error').style.display = 'block'; isValid = false; }
+      if (!description) { document.getElementById('description-error').style.display = 'block'; isValid = false; }
+      if (!category) { document.getElementById('category-error').style.display = 'block'; isValid = false; }
+      if (!priority) { document.getElementById('priority-error').style.display = 'block'; isValid = false; }
+      if (!UI.validateEmail(email)) {
+        let el = document.getElementById('email-error');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'email-error'; el.className = 'error-message';
+          document.getElementById('email').parentElement.appendChild(el);
+        }
+        el.textContent = 'Valid email is required'; el.style.display = 'block'; isValid = false;
       }
-
-      if (!issueTitle.trim()) {
-        document.getElementById('title-error').style.display = 'block';
-        isValid = false;
+      if (mobile && !UI.validatePhone(mobile)) {
+        let el = document.getElementById('mobile-error');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'mobile-error'; el.className = 'error-message';
+          document.getElementById('mobile').parentElement.appendChild(el);
+        }
+        el.textContent = 'Mobile must be 10 digits'; el.style.display = 'block'; isValid = false;
       }
+      if (!isValid) return;
 
-      if (!description.trim()) {
-        document.getElementById('description-error').style.display = 'block';
-        isValid = false;
-      }
-
-      if (!category) {
-        document.getElementById('category-error').style.display = 'block';
-        isValid = false;
-      }
-
-      if (!priority) {
-        document.getElementById('priority-error').style.display = 'block';
-        isValid = false;
-      }
-
-      if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-        document.getElementById('email-error').style.display = 'block';
-        isValid = false;
-      }
-
-      if (!/^\d{10}$/.test(mobile)) {
-        document.getElementById('mobile-error').style.display = 'block';
-        isValid = false;
-      }
-
-      if (isValid) {
-        // Disable submit button
-        submitButton.disabled = true;
-        submitButton.textContent = 'Submitting...';
-
+      await UI.blockDuplicate('create-ticket', async () => {
+        UI.setLoading(submitButton, true, 'Submitting…');
         try {
-          // Create ticket via API
-          const result = await API.createTicket(
-            issueTitle,
-            description,
-            priority,
-            category,
-            customerName,
-            email,
-            mobile
-          );
-
+          const result = await API.createTicket(issueTitle, description, priority, category, customerName, email, mobile);
           if (result.success) {
-            // Show success message
-            const successMsg = document.getElementById('success-message');
             const ticketId = result.id || (result.ticket ? result.ticket.id : '');
-            successMsg.textContent = `Ticket created successfully! Ticket ID: #${ticketId}`;
-            successMsg.style.display = 'block';
-
-            // Reset form
+            UI.toast('success', 'Ticket Created', `Ticket #${ticketId} submitted successfully`);
             ticketForm.reset();
-
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            // Redirect after 3 seconds
-            setTimeout(() => {
-              window.location.href = 'client.html';
-            }, 3000);
+            setTimeout(() => { window.location.href = 'client.html'; }, 1500);
           } else {
-            alert('Failed to create ticket: ' + (result.message || 'Unknown error'));
+            UI.toast('error', 'Failed', result.message || 'Could not create ticket');
+            UI.setLoading(submitButton, false);
           }
         } catch (error) {
           console.error('Error creating ticket:', error);
-          alert('Failed to create ticket. Please try again.');
-        } finally {
-          // Re-enable submit button
-          submitButton.disabled = false;
-          submitButton.textContent = 'Submit Ticket';
+          UI.toast('error', 'Failed', 'Could not create ticket. Please try again.');
+          UI.setLoading(submitButton, false);
         }
-      }
+      });
     });
   </script>
 </body>

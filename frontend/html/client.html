@@ -4,122 +4,95 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carbochem - Consumer Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../css/sidebar.css" rel="stylesheet">
     <link href="../css/theme.css" rel="stylesheet">
-    <style>
-        :root { --primary-color: #1F3373; --background-light: #f0f4f8; --border-color: #d1d5db; }
-        body { font-family: 'Inter', sans-serif; background: var(--background-light); margin: 0; }
-        .dashboard { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
-        .ticket-card { background: #fff; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .timeline-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--primary-color); display: inline-block; margin-right: 8px; }
-        @media (max-width:768px) { .layout-row { flex-direction: column !important; } }
-    </style>
 </head>
 <body>
 <div class="d-flex layout-row layout-with-sidebar">
     <aside id="sidebar-container"></aside>
     <div class="flex-grow-1 main-content">
-        <div class="dashboard">
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                <h2 class="mb-0 text-primary">My Support Tickets</h2>
-                <a href="create-ticket.html" class="btn btn-primary">➕ Raise Ticket</a>
+        <div class="dashboard-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h1 class="page-title mb-0">My Support Tickets</h1>
+                <p class="page-subtitle mb-0">Track and manage your support requests</p>
             </div>
-
-            <!-- Compact metrics card grid -->
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-md-3">
-                    <div class="card mb-0 text-center py-3">
-                        <h4 class="mb-0 text-primary fw-bold" id="stat-open">0</h4>
-                        <small class="text-muted">Open</small>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card mb-0 text-center py-3">
-                        <h4 class="mb-0 text-primary fw-bold" id="stat-inprogress">0</h4>
-                        <small class="text-muted">In Progress</small>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card mb-0 text-center py-3">
-                        <h4 class="mb-0 text-success fw-bold" id="stat-resolved">0</h4>
-                        <small class="text-muted">Resolved</small>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card mb-0 text-center py-3">
-                        <h4 class="mb-0 text-secondary fw-bold" id="stat-closed">0</h4>
-                        <small class="text-muted">Closed</small>
-                    </div>
-                </div>
-            </div>
-
-            <div class="alert alert-info py-2 mb-4 small" id="holiday-notice" style="display:none"></div>
-
-            <div class="card mb-4"><div class="card-body py-3">
-                <div class="mb-0">
-                    <input type="text" class="form-control" id="searchInput" placeholder="Search tickets by ID or title...">
-                </div>
-            </div></div>
-
-            <div id="tickets" class="ticket-list"></div>
+            <a href="create-ticket.html" class="btn btn-primary">➕ Raise Ticket</a>
         </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3"><div class="summary-card"><h3 id="stat-open">0</h3><p>Open</p></div></div>
+            <div class="col-6 col-md-3"><div class="summary-card"><h3 id="stat-assigned" style="color:#403294">0</h3><p>Assigned</p></div></div>
+            <div class="col-6 col-md-3"><div class="summary-card"><h3 id="stat-inprogress" style="color:#974F0C">0</h3><p>In Progress</p></div></div>
+            <div class="col-6 col-md-3"><div class="summary-card"><h3 id="stat-resolved" style="color:#00875A">0</h3><p>Resolved</p></div></div>
+        </div>
+
+        <div class="alert alert-info py-2 mb-3 small" id="holiday-notice" style="display:none"></div>
+
+        <div class="filter-bar mb-4">
+            <input type="text" class="form-control" id="searchInput" placeholder="Search by ID, title, status, priority…">
+            <select class="form-select" id="statusFilter" style="max-width:180px">
+                <option value="">All Statuses</option>
+                <option value="Open">Open</option>
+                <option value="Assigned">Assigned</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+            </select>
+            <select class="form-select" id="priorityFilter" style="max-width:160px">
+                <option value="">All Priorities</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+        </div>
+
+        <div id="tickets" class="ticket-list"></div>
     </div>
 </div>
 <script src="../js/api.js"></script>
+<script src="../js/ui.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/sidebar.js"></script>
 <script>
-if (!localStorage.getItem('token') || localStorage.getItem('userRole') !== 'client') {
-    window.location.href = 'index.html';
-}
-
-// Inject Sidebar
-Sidebar.inject('client', 'client.html');
+if (!requireAuth(['consumer'])) throw new Error('auth');
+Sidebar.inject(getSidebarRole(), 'client.html');
 
 const priorityDays = { High: 1, Critical: 1, Medium: 3, Low: 7 };
 let allTickets = [];
 
+function countByStatus(tickets) {
+    const c = { open: 0, assigned: 0, inprogress: 0, resolved: 0, closed: 0 };
+    tickets.forEach(t => {
+        const s = (t.status || '').toLowerCase().replace(/\s+/g, '');
+        if (c[s] !== undefined) c[s]++;
+    });
+    return c;
+}
+
 async function loadTickets() {
     const el = document.getElementById('tickets');
-    el.innerHTML = `
-        <div class="spinner-container">
-            <div class="loading-spinner"></div>
-        </div>`;
+    el.innerHTML = '<div class="spinner-container"><div class="loading-spinner"></div></div>';
     const r = await API.getMyTickets();
-    if (r.success) {
-        allTickets = r.tickets || [];
-        
-        // Calculate status counts
-        let open = 0, inProgress = 0, resolved = 0, closed = 0;
-        allTickets.forEach(t => {
-            const status = t.status.toLowerCase().replace(' ', '');
-            if (status === 'open') open++;
-            else if (status === 'inprogress') inProgress++;
-            else if (status === 'resolved') resolved++;
-            else if (status === 'closed') closed++;
-        });
-        
-        document.getElementById('stat-open').textContent = open;
-        document.getElementById('stat-inprogress').textContent = inProgress;
-        document.getElementById('stat-resolved').textContent = resolved;
-        document.getElementById('stat-closed').textContent = closed;
-
-        if (allTickets.length === 0) {
-            el.innerHTML = `
-                <div class="empty-state">
-                    <span class="empty-state-icon">🎫</span>
-                    <h5>No Tickets Found</h5>
-                    <p>You have not raised any support tickets yet.</p>
-                    <a href="create-ticket.html" class="btn btn-primary mt-2">Raise Ticket</a>
-                </div>`;
-        } else {
-            renderTickets(allTickets);
-        }
-    } else {
-        el.innerHTML = `<p class="text-danger text-center">Failed to load tickets: ${r.message || 'Unknown error'}</p>`;
+    if (!r.success) {
+        el.innerHTML = `<p class="text-danger text-center">${UI.emptyState('Failed to load tickets', '⚠️')}</p>`;
+        UI.toast('error', 'Error', r.message || 'Failed to load tickets');
+        return;
     }
+    allTickets = r.tickets || [];
+    const c = countByStatus(allTickets);
+    document.getElementById('stat-open').textContent = c.open;
+    document.getElementById('stat-assigned').textContent = c.assigned;
+    document.getElementById('stat-inprogress').textContent = c.inprogress;
+    document.getElementById('stat-resolved').textContent = c.resolved + c.closed;
+
+    if (!allTickets.length) {
+        el.innerHTML = `<div class="card"><div class="card-body">${UI.emptyState('No tickets yet — raise your first support request', '🎫')}<div class="text-center"><a href="create-ticket.html" class="btn btn-primary">Raise Ticket</a></div></div></div>`;
+        return;
+    }
+    applyFilters();
 }
 
 async function loadHolidayNotice() {
@@ -130,34 +103,36 @@ async function loadHolidayNotice() {
     if (upcoming.length) {
         noticeEl.innerHTML = `📅 <strong>Upcoming holiday:</strong> ${upcoming[0].name} (${new Date(upcoming[0].date).toLocaleDateString()})`;
         noticeEl.style.display = 'block';
-    } else {
-        noticeEl.style.display = 'none';
     }
 }
 
 async function renderTickets(tickets) {
     const el = document.getElementById('tickets');
-    if (!tickets.length) { el.innerHTML = '<p class="text-muted">No tickets found. <a href="create-ticket.html">Raise a ticket</a></p>'; return; }
-
+    if (!tickets.length) {
+        el.innerHTML = `<div class="card"><div class="card-body">${UI.emptyState('No tickets match your search', '🔍')}</div></div>`;
+        return;
+    }
     el.innerHTML = await Promise.all(tickets.map(async t => {
         const days = priorityDays[t.priority] || 3;
         const hr = await API.getTicketHistory(t._id || t.id);
-        const history = (hr.history || []).slice(-5);
-        return `<div class="ticket-card">
+        const history = (hr.history || []).slice(-4);
+        return `<div class="ticket-card mb-3">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                <div><strong>#${t.id}</strong> – ${t.title}<br>
-                <span class="badge bg-primary">${t.status}</span> <span class="badge bg-secondary">${t.priority}</span>
-                <small class="text-muted ms-2">Est. resolution: ${days} day${days>1?'s':''}</small></div>
+                <div>
+                    <strong>#${t.id}</strong> – ${t.title}<br>
+                    ${UI.statusBadge(t.status)} ${UI.priorityBadge(t.priority)}
+                    <small class="text-muted ms-2">Est. resolution: ${days} day${days > 1 ? 's' : ''}</small>
+                </div>
                 <button class="btn btn-sm btn-outline-primary" onclick="location.href='ticket-details.html?id=${t._id || t.id}'">View Details</button>
             </div>
             <div class="mt-2 small"><strong>Timeline:</strong></div>
             <div class="ms-2 mt-1">${history.length ? history.map(h =>
-                `<div class="small"><span class="timeline-dot"></span>${h.action.replace(/_/g,' ')} – ${h.changedByName || 'System'} <em class="text-muted">${new Date(h.createdAt).toLocaleString()}</em></div>`
+                `<div class="small"><span class="timeline-dot" style="width:8px;height:8px;border-radius:50%;background:#0052CC;display:inline-block;margin-right:6px"></span>${h.action.replace(/_/g,' ')} – ${h.changedByName || 'System'} <em class="text-muted">${new Date(h.createdAt).toLocaleString()}</em></div>`
             ).join('') : '<small class="text-muted">No activity yet</small>'}</div>
             <form class="mt-2 comment-form" data-id="${t._id || t.id}">
                 <div class="input-group input-group-sm">
-                    <input type="text" class="form-control" placeholder="Add a comment..." required>
-                    <button class="btn btn-primary">Send</button>
+                    <input type="text" class="form-control" placeholder="Add a comment…" required>
+                    <button class="btn btn-primary comment-btn" type="submit">Send</button>
                 </div>
             </form>
         </div>`;
@@ -166,17 +141,39 @@ async function renderTickets(tickets) {
     document.querySelectorAll('.comment-form').forEach(form => {
         form.addEventListener('submit', async e => {
             e.preventDefault();
-            const text = form.querySelector('input').value;
-            const r = await API.addComment(form.dataset.id, text);
-            if (r.success) { form.querySelector('input').value = ''; loadTickets(); }
+            const btn = form.querySelector('.comment-btn');
+            const input = form.querySelector('input');
+            const text = input.value.trim();
+            if (!text) return;
+            await UI.blockDuplicate('comment-' + form.dataset.id, async () => {
+                UI.setLoading(btn, true, 'Sending…');
+                const r = await API.addComment(form.dataset.id, text);
+                UI.setLoading(btn, false);
+                if (r.success) {
+                    input.value = '';
+                    UI.toast('success', 'Comment added');
+                    loadTickets();
+                } else {
+                    UI.toast('error', 'Failed', r.message || 'Could not add comment');
+                }
+            });
         });
     });
 }
 
-document.getElementById('searchInput').addEventListener('input', e => {
-    const term = e.target.value.toLowerCase();
-    renderTickets(allTickets.filter(t => t.id.toString().includes(term) || t.title.toLowerCase().includes(term)));
-});
+function applyFilters() {
+    const term = document.getElementById('searchInput').value;
+    const status = document.getElementById('statusFilter').value;
+    const priority = document.getElementById('priorityFilter').value;
+    let filtered = UI.filterItems(allTickets, term, ['id', 'title', 'status', 'priority']);
+    if (status) filtered = filtered.filter(t => t.status === status);
+    if (priority) filtered = filtered.filter(t => t.priority === priority);
+    renderTickets(filtered);
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('statusFilter').addEventListener('change', applyFilters);
+document.getElementById('priorityFilter').addEventListener('change', applyFilters);
 
 loadHolidayNotice();
 loadTickets();

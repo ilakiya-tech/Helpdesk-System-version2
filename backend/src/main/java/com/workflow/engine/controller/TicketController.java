@@ -144,7 +144,7 @@ public class TicketController {
     }
 
     @PostMapping("/{id}/comments")
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CONSUMER', 'STAFF', 'ADMIN')")
     @Operation(
         summary = "Add a comment",
         description = "Appends a new note or comment to the ticket's message timeline.",

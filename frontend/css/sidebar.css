@@ -12,11 +12,12 @@
   position: sticky;
   top: 0;
   flex-shrink: 0;
-  background-color: #1F3373 !important;
+  background: linear-gradient(180deg, #0747A6 0%, #0052CC 100%) !important;
   color: #ffffff;
   display: flex;
   flex-direction: column;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 2px 0 12px rgba(9, 30, 66, 0.18);
+  z-index: 100;
 }
 
 .sidebar-header {

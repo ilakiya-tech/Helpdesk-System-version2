@@ -4,109 +4,240 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management - Carbochem Helpdesk</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../css/sidebar.css" rel="stylesheet">
     <link href="../css/theme.css" rel="stylesheet">
-    <style>
-        :root { --primary-color: #1F3373; --background-light: #f0f4f8; }
-        body { font-family: 'Inter', sans-serif; background: var(--background-light); margin: 0; }
-        .main-content { flex: 1; padding: 1.5rem; overflow-x: auto; }
-        .card-table { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
-        @media (max-width:768px) { .layout-row { flex-direction: column !important; } }
-    </style>
 </head>
 <body>
 <div class="d-flex layout-row layout-with-sidebar">
     <aside id="sidebar-container"></aside>
     <main class="main-content">
-        <h2 class="mb-4">User Management</h2>
-        <div class="card mb-4"><div class="card-body">
-            <h5 class="card-title">Create New User</h5>
-            <form id="create-user-form" class="row g-3">
-                <div class="col-md-6"><label class="form-label">Full Name</label><input type="text" class="form-control" id="u-name" required></div>
-                <div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" id="u-email" required></div>
-                <div class="col-md-4"><label class="form-label">Username</label><input type="text" class="form-control" id="u-username" required></div>
-                <div class="col-md-4"><label class="form-label">Password</label><input type="password" class="form-control" id="u-password" required minlength="6"></div>
-                <div class="col-md-4"><label class="form-label">Role</label>
-                    <select class="form-select" id="u-role" required><option value="staff">Staff</option><option value="client">Consumer</option></select></div>
-                <div class="col-md-4"><label class="form-label">Phone</label><input type="tel" class="form-control" id="u-phone"></div>
-                <div class="col-md-4"><label class="form-label">Department</label><input type="text" class="form-control" id="u-dept"></div>
-                <div class="col-12"><button type="submit" class="btn btn-primary">Create User</button></div>
-            </form>
-        </div></div>
-        <div class="card-table table-responsive">
+        <h1 class="page-title">User Management</h1>
+        <p class="page-subtitle">Create and manage admin, staff, and consumer accounts</p>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Create New User</h5>
+                <form id="create-user-form" class="row g-3" novalidate>
+                    <div class="col-md-4">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" id="u-role" required>
+                            <option value="staff">Staff</option>
+                            <option value="consumer">Consumer</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="u-name" required>
+                        <div class="field-error d-none" id="err-name"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" id="u-username" required minlength="3">
+                        <div class="field-error d-none" id="err-username"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="u-email" required>
+                        <div class="field-error d-none" id="err-email"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="u-password" required minlength="6">
+                        <div class="field-error d-none" id="err-password"></div>
+                    </div>
+                    <!-- Staff & Consumer fields -->
+                    <div class="col-md-4 role-field role-staff role-consumer">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="u-phone" placeholder="10-digit mobile">
+                        <div class="field-error d-none" id="err-phone"></div>
+                    </div>
+                    <div class="col-md-4 role-field role-staff">
+                        <label class="form-label">Department</label>
+                        <input type="text" class="form-control" id="u-dept">
+                    </div>
+                    <div class="col-md-4 role-field role-staff">
+                        <label class="form-label">Designation</label>
+                        <input type="text" class="form-control" id="u-designation" placeholder="e.g. Senior Engineer">
+                    </div>
+                    <div class="col-md-4 role-field role-staff">
+                        <label class="form-label">Availability</label>
+                        <select class="form-select" id="u-availability">
+                            <option value="available">Available</option>
+                            <option value="busy">Busy</option>
+                            <option value="on_leave">On Leave</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 role-field role-consumer">
+                        <label class="form-label">Company / Project</label>
+                        <input type="text" class="form-control" id="u-company" placeholder="Company or project name">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary" id="create-user-btn">Create User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="filter-bar mb-3">
+            <input type="text" class="form-control" id="user-search" placeholder="Search by name, username, email…">
+            <select class="form-select" id="role-filter" style="max-width:160px">
+                <option value="">All Roles</option>
+                <option value="staff">Staff</option>
+                <option value="consumer">Consumer</option>
+            </select>
+        </div>
+
+        <div class="card table-responsive">
             <table class="table table-hover mb-0">
-                <thead class="table-light"><tr><th>Name</th><th>Username</th><th>Role</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Email</th><th>Phone</th><th>Department</th><th>Actions</th></tr></thead>
                 <tbody id="users-table"></tbody>
             </table>
+            <div id="users-pagination" class="p-3"></div>
         </div>
     </main>
 </div>
 <script src="../js/api.js"></script>
+<script src="../js/ui.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/sidebar.js"></script>
 <script>
 if (!requireAuth(['admin'])) throw new Error('auth');
 Sidebar.inject('admin', 'admin-users.html');
 
+let allUsers = [], userPage = 0;
+const PAGE_SIZE = 10;
+
+function showFieldErr(id, msg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (msg) { el.textContent = msg; el.classList.remove('d-none'); }
+    else { el.textContent = ''; el.classList.add('d-none'); }
+}
+
+function updateRoleFields() {
+    const role = document.getElementById('u-role').value;
+    document.querySelectorAll('.role-field').forEach(el => el.style.display = 'none');
+    if (role === 'staff') {
+        document.querySelectorAll('.role-staff').forEach(el => el.style.display = '');
+    } else if (role === 'consumer') {
+        document.querySelectorAll('.role-consumer').forEach(el => el.style.display = '');
+    }
+}
+
+document.getElementById('u-role').addEventListener('change', updateRoleFields);
+updateRoleFields();
+
 async function loadUsers() {
     const tbody = document.getElementById('users-table');
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="7" class="text-center py-4">
-                <div class="spinner-container">
-                    <div class="loading-spinner"></div>
-                </div>
-            </td>
-        </tr>`;
+    UI.skeleton(tbody.parentElement, 5, 7);
     const r = await API.getUsers();
     if (!r.success) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center py-4 text-danger">
-                    Failed to load users
-                </td>
-            </tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Failed to load users</td></tr>`;
         return;
     }
-    // Backend returns User entity: id, name, username, email, mobile, role, department, availability
-    tbody.innerHTML = (r.users || []).filter(u => u.role !== 'admin').map(u => `
-        <tr>
-            <td>${u.name || '-'}</td><td>${u.username}</td><td><span class="badge bg-secondary">${u.role}</span></td>
-            <td>${u.email || '-'}</td><td>${u.mobile || '-'}</td>
-            <td><span class="badge bg-success">Active</span></td>
-            <td>
-                <button class="btn btn-sm btn-outline-primary" onclick="resetPw('${u.id}')">Reset PW</button>
-            </td>
-        </tr>`).join('');
+    allUsers = (r.users || []).filter(u => u.role !== 'admin');
+    renderUsers();
 }
-async function toggleStatus(id, active) {
-    // Backend has no isActive field — show feedback but no backend change
-    alert('User status management requires Security implementation.');
+
+function renderUsers() {
+    const term = document.getElementById('user-search').value;
+    const roleF = document.getElementById('role-filter').value;
+    let filtered = UI.filterItems(allUsers, term, ['name', 'username', 'email', 'mobile', 'department']);
+    if (roleF) filtered = filtered.filter(u => normalizeRole(u.role) === roleF);
+    const page = UI.paginate(filtered, userPage, PAGE_SIZE);
+    const tbody = document.getElementById('users-table');
+    if (!page.items.length) {
+        tbody.innerHTML = `<tr><td colspan="7">${UI.emptyState('No users found', '👥')}</td></tr>`;
+    } else {
+        tbody.innerHTML = page.items.map(u => `
+            <tr>
+                <td>${u.name || '-'}</td>
+                <td>${u.username}</td>
+                <td>${UI.roleBadge(u.role)}</td>
+                <td>${u.email || '-'}</td>
+                <td>${u.mobile || '-'}</td>
+                <td>${u.department || '-'}</td>
+                <td><button class="btn btn-sm btn-outline-primary" onclick="resetPw('${u.id}')">Reset PW</button></td>
+            </tr>`).join('');
+    }
+    UI.renderPagination(document.getElementById('users-pagination'), page, p => { userPage = p; renderUsers(); });
 }
+
+document.getElementById('user-search').addEventListener('input', () => { userPage = 0; renderUsers(); });
+document.getElementById('role-filter').addEventListener('change', () => { userPage = 0; renderUsers(); });
+
 async function resetPw(id) {
     const pw = prompt('Enter new password (min 6 chars):');
-    if (pw && pw.length >= 6) {
+    if (!pw || pw.length < 6) return;
+    const btn = event?.target;
+    await UI.blockDuplicate('reset-' + id, async () => {
+        if (btn) UI.setLoading(btn, true, 'Resetting…');
         const r = await API.resetUserPassword(id, pw);
-        if (r.success) { alert('Password reset successfully!'); }
-        else { alert('Reset failed: ' + (r.message || 'Unknown error')); }
-    }
+        if (btn) UI.setLoading(btn, false);
+        if (r.success) UI.toast('success', 'Password reset');
+        else UI.toast('error', 'Failed', r.message || 'Reset failed');
+    });
 }
+
 document.getElementById('create-user-form').addEventListener('submit', async e => {
     e.preventDefault();
-    const r = await API.createUser({
-        name:       document.getElementById('u-name').value,
-        email:      document.getElementById('u-email').value,
-        username:   document.getElementById('u-username').value,
-        password:   document.getElementById('u-password').value,
-        role:       document.getElementById('u-role').value,
-        mobile:     document.getElementById('u-phone').value,   // backend field is `mobile`
-        department: document.getElementById('u-dept').value
+    ['err-name','err-username','err-email','err-password','err-phone'].forEach(id => showFieldErr(id, ''));
+
+    const role = document.getElementById('u-role').value;
+    const name = document.getElementById('u-name').value.trim();
+    const username = document.getElementById('u-username').value.trim();
+    const email = document.getElementById('u-email').value.trim();
+    const password = document.getElementById('u-password').value;
+    const phone = document.getElementById('u-phone').value.trim();
+    let valid = true;
+
+    if (!name) { showFieldErr('err-name', 'Name is required'); valid = false; }
+    if (username.length < 3) { showFieldErr('err-username', 'Username must be at least 3 characters'); valid = false; }
+    if (!UI.validateEmail(email)) { showFieldErr('err-email', 'Valid email is required'); valid = false; }
+    if (!UI.validatePassword(password)) { showFieldErr('err-password', 'Password must be at least 6 characters'); valid = false; }
+    if ((role === 'staff' || role === 'consumer') && phone && !UI.validatePhone(phone)) {
+        showFieldErr('err-phone', 'Phone must be 10 digits'); valid = false;
+    }
+    if (!valid) return;
+
+    const usersResp = await API.getUsers();
+    const dup = UI.checkDuplicateUser(usersResp.users || [], { username, email });
+    if (!dup.ok) {
+        showFieldErr('err-' + dup.field, dup.message);
+        UI.toast('warning', 'Duplicate', dup.message);
+        return;
+    }
+
+    const btn = document.getElementById('create-user-btn');
+    await UI.blockDuplicate('create-user', async () => {
+        UI.setLoading(btn, true, 'Creating…');
+        const payload = { name, email, username, password, role };
+        if (role === 'staff') {
+            const dept = document.getElementById('u-dept').value.trim();
+            const desig = document.getElementById('u-designation').value.trim();
+            payload.mobile = phone;
+            payload.department = desig ? (dept ? `${dept} | ${desig}` : desig) : dept;
+            payload.availability = document.getElementById('u-availability').value;
+        } else if (role === 'consumer') {
+            payload.mobile = phone;
+            payload.department = document.getElementById('u-company').value.trim();
+        }
+        const r = await API.createUser(payload);
+        UI.setLoading(btn, false);
+        if (r.success) {
+            UI.toast('success', 'User created', `${name} registered as ${role}`);
+            e.target.reset();
+            updateRoleFields();
+            loadUsers();
+        } else {
+            UI.toast('error', 'Failed', r.message || 'Could not create user');
+        }
     });
-    if (r.success) { alert('User created successfully!'); e.target.reset(); loadUsers(); }
-    else alert(r.message || 'Failed to create user');
 });
+
 loadUsers();
 </script>
 </body>
