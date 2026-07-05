@@ -46,19 +46,22 @@ public class TicketService {
     private final MaxHeapEngine maxHeapEngine;
     private final TrieEngine trieEngine;
     private final SlaProperties slaProperties;
+    private final com.workflow.engine.repository.AttachmentRepository attachmentRepository;
 
     public TicketService(TicketRepository ticketRepository,
                           CommentRepository commentRepository,
                           ActivityHistoryRepository activityHistoryRepository,
                           MaxHeapEngine maxHeapEngine,
                           TrieEngine trieEngine,
-                          SlaProperties slaProperties) {
+                          SlaProperties slaProperties,
+                          com.workflow.engine.repository.AttachmentRepository attachmentRepository) {
         this.ticketRepository = ticketRepository;
         this.commentRepository = commentRepository;
         this.activityHistoryRepository = activityHistoryRepository;
         this.maxHeapEngine = maxHeapEngine;
         this.trieEngine = trieEngine;
         this.slaProperties = slaProperties;
+        this.attachmentRepository = attachmentRepository;
     }
 
     /**
@@ -186,11 +189,13 @@ public class TicketService {
         }
         List<Comment> comments = commentRepository.findByTicketIdOrderByCreatedAtAsc(id);
         List<ActivityHistory> history = activityHistoryRepository.findByTicketIdOrderByCreatedAtAsc(id);
+        List<com.workflow.engine.entity.Attachment> attachments = attachmentRepository.findByTicketId(id);
 
         Map<String, Object> detail = new LinkedHashMap<>();
         detail.put("ticket", ticketOpt.get());
         detail.put("comments", comments);
         detail.put("history", history);
+        detail.put("attachments", attachments);
         return detail;
     }
 

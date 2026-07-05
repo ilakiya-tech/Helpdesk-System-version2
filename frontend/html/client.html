@@ -393,13 +393,23 @@ document.getElementById('modal-ticket-form').addEventListener('submit', async fu
                 }
 
                 const r = await API.createTicket(issueTitle, fullDescription, priority, category, customerName, email, mobile);
-                UI.setLoading(btn, false);
                 if (r.success) {
+                    const ticketId = r.id || (r.ticket && r.ticket.id);
+                    if (ticketId && fileInput.files.length > 0) {
+                        try {
+                            await API.uploadAttachment(ticketId, fileInput.files[0]);
+                        } catch (uploadErr) {
+                            console.error('Backend upload failed:', uploadErr);
+                            UI.toast('warning', 'Warning', 'Ticket created, but backend file upload failed: ' + uploadErr.message);
+                        }
+                    }
+                    UI.setLoading(btn, false);
                     UI.toast('success', 'Ticket Created', 'Ticket raised successfully');
                     raiseModal.hide();
                     document.getElementById('modal-ticket-form').reset();
                     loadTickets();
                 } else {
+                    UI.setLoading(btn, false);
                     UI.toast('error', 'Error', r.message || 'Submission failed');
                 }
             } catch(err) {

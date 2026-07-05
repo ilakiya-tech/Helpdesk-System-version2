@@ -34,6 +34,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final com.workflow.engine.service.EmailService emailService;
 
     @Value("${app.org.secret}")
     private String adminSecretKey;
@@ -41,11 +42,13 @@ public class AuthController {
     public AuthController(UserRepository userRepository,
                           AuthenticationManager authenticationManager,
                           JwtTokenProvider tokenProvider,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          com.workflow.engine.service.EmailService emailService) {
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     @PostMapping("/auth/login")
@@ -130,6 +133,10 @@ public class AuthController {
                 request.availability()
         );
         User saved = userRepository.save(user);
+
+        if (saved.getEmail() != null && !saved.getEmail().isBlank()) {
+            emailService.sendWelcomeEmail(saved.getEmail(), saved.getName(), saved.getRole());
+        }
 
         // We do not auto-login upon registration to maintain explicit login flow
         response.put("success",  true);

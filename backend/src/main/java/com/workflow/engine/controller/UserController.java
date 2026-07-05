@@ -23,10 +23,12 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.workflow.engine.service.EmailService emailService;
 
-    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder, com.workflow.engine.service.EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     @GetMapping
@@ -91,6 +93,9 @@ public class UserController {
                     }
                     if (updated.getPassword() != null && !updated.getPassword().isEmpty() && !updated.getPassword().equals(existing.getPassword())) {
                         existing.setPassword(passwordEncoder.encode(updated.getPassword()));
+                        if (existing.getEmail() != null && !existing.getEmail().isBlank()) {
+                            emailService.sendPasswordResetEmail(existing.getEmail(), existing.getName(), updated.getPassword());
+                        }
                     }
                     return ResponseEntity.ok(userRepository.save(existing));
                 })

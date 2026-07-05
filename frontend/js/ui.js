@@ -325,12 +325,268 @@ window.UI = (() => {
     return { ok: true };
   }
 
+  // ── Notification Center ───────────────────────────────────────────────────
+  let notificationsDropdown = null;
+
+  function ensureNotificationsDropdown() {
+    if (notificationsDropdown && document.body.contains(notificationsDropdown)) {
+      return notificationsDropdown;
+    }
+    
+    const styleId = 'ui-notifications-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        .ui-noti-dropdown {
+          position: absolute;
+          top: 60px;
+          right: 20px;
+          width: 340px;
+          max-height: 450px;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+          z-index: 10000;
+          display: none;
+          flex-direction: column;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .ui-noti-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 16px;
+          border-bottom: 1px solid #f1f5f9;
+          font-weight: 600;
+          color: #1e293b;
+        }
+        .ui-noti-body {
+          flex: 1;
+          overflow-y: auto;
+          max-height: 350px;
+        }
+        .ui-noti-item {
+          padding: 12px 16px;
+          border-bottom: 1px solid #f8fafc;
+          cursor: pointer;
+          transition: background 0.15s ease;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .ui-noti-item:hover {
+          background: #f8fafc;
+        }
+        .ui-noti-item.unread {
+          background: #f0f4ff;
+          border-left: 3px solid #1F3373;
+        }
+        .ui-noti-item.unread:hover {
+          background: #e8eeff;
+        }
+        .ui-noti-item-title {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #1e293b;
+        }
+        .ui-noti-item-msg {
+          font-size: 0.8rem;
+          color: #64748b;
+          line-height: 1.4;
+        }
+        .ui-noti-item-time {
+          font-size: 0.7rem;
+          color: #94a3b8;
+          align-self: flex-end;
+          margin-top: 2px;
+        }
+        .ui-noti-btn-link {
+          background: none;
+          border: none;
+          color: #1F3373;
+          font-weight: 600;
+          font-size: 0.75rem;
+          cursor: pointer;
+          padding: 0;
+        }
+        .ui-noti-btn-link:hover {
+          text-decoration: underline;
+        }
+        .ui-noti-empty {
+          padding: 24px;
+          text-align: center;
+          color: #94a3b8;
+          font-size: 0.85rem;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    notificationsDropdown = document.createElement('div');
+    notificationsDropdown.id = 'ui-notifications-dropdown';
+    notificationsDropdown.className = 'ui-noti-dropdown';
+    document.body.appendChild(notificationsDropdown);
+
+    document.addEventListener('click', (e) => {
+      const btn = document.getElementById('nav-notifications-btn');
+      if (notificationsDropdown.style.display === 'flex' && 
+          !notificationsDropdown.contains(e.target) && 
+          (!btn || !btn.contains(e.target))) {
+        notificationsDropdown.style.display = 'none';
+      }
+    });
+
+    return notificationsDropdown;
+  }
+
+  function toggleNotificationsDropdown(event) {
+    if (event) event.stopPropagation();
+    const dropdown = ensureNotificationsDropdown();
+    if (dropdown.style.display === 'flex') {
+      dropdown.style.display = 'none';
+    } else {
+      const btn = document.getElementById('nav-notifications-btn');
+      if (btn) {
+        const rect = btn.getBoundingClientRect();
+        dropdown.style.top = `${rect.bottom + window.scrollY + 8}px`;
+        dropdown.style.left = 'auto';
+        dropdown.style.right = `${window.innerWidth - rect.right - window.scrollX}px`;
+      }
+      dropdown.style.display = 'flex';
+      refreshNotificationsDropdown();
+    }
+  }
+
+  async function refreshNotificationsDropdown() {
+    const dropdown = ensureNotificationsDropdown();
+    dropdown.innerHTML = `
+      <div class="ui-noti-header">
+        <span>Notifications</span>
+        <button class="ui-noti-btn-link" id="noti-mark-all-btn" style="display: none;" onclick="UI.markAllNotificationsAsRead()">Mark all as read</button>
+      </div>
+      <div class="ui-noti-body" id="noti-list-container">
+        <div style="padding: 20px; text-align: center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .75s linear infinite">
+            <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" opacity=".25"/>
+            <path d="M21 12a9 9 0 00-9-9" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    `;
+
+    try {
+      const resp = await API.getNotifications();
+      const list = resp.items || resp.content || resp._raw || [];
+      const listContainer = document.getElementById('noti-list-container');
+      const markAllBtn = document.getElementById('noti-mark-all-btn');
+
+      if (!list.length) {
+        listContainer.innerHTML = `<div class="ui-noti-empty">No notifications yet</div>`;
+        markAllBtn.style.display = 'none';
+        return;
+      }
+
+      const hasUnread = list.some(n => !n.isRead || !n.read);
+      markAllBtn.style.display = hasUnread ? 'inline-block' : 'none';
+
+      listContainer.innerHTML = list.map(n => {
+        const isRead = n.isRead || n.read;
+        const date = new Date(n.createdAt);
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        return `
+          <div class="ui-noti-item ${isRead ? '' : 'unread'}" onclick="UI.handleNotificationClick(${n.id}, '${n.notificationType}', ${n.referenceId})">
+            <div class="ui-noti-item-title">${escapeHtml(n.title)}</div>
+            <div class="ui-noti-item-msg">${escapeHtml(n.message)}</div>
+            <div class="ui-noti-item-time">${timeStr}</div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      document.getElementById('noti-list-container').innerHTML = `<div class="ui-noti-empty" style="color: #dc2626;">Failed to load notifications</div>`;
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+
+  async function handleNotificationClick(id, type, referenceId) {
+    try {
+      await API.markNotificationAsRead(id);
+      updateUnreadCount();
+      
+      const dropdown = ensureNotificationsDropdown();
+      dropdown.style.display = 'none';
+
+      if (referenceId) {
+        if (type.startsWith('LEAVE_')) {
+          const role = localStorage.getItem('userRole');
+          if (role === 'admin') {
+            window.location.href = 'admin-staff.html';
+          } else {
+            window.location.href = 'staff.html';
+          }
+        } else {
+          localStorage.setItem('selectedTicketId', referenceId);
+          window.location.href = 'ticket-details.html';
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function markAllNotificationsAsRead() {
+    try {
+      await API.markAllNotificationsAsRead();
+      updateUnreadCount();
+      refreshNotificationsDropdown();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function updateUnreadCount() {
+    const badge = document.getElementById('nav-notifications-badge');
+    if (!badge) return;
+
+    try {
+      const resp = await API.getUnreadNotificationsCount();
+      const count = resp.unreadCount || 0;
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    } catch (e) {
+      console.error('Failed to get notifications unread count:', e);
+    }
+  }
+
+  function initNotifications() {
+    updateUnreadCount();
+    // Poll count every 30 seconds
+    setInterval(updateUnreadCount, 30000);
+  }
+
+  // Auto-init notifications
+  document.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('token')) {
+      setTimeout(initNotifications, 500);
+    }
+  });
+
   return {
     toast, setLoading, confirm, skeleton,
     guardSession, blockDuplicate,
     filterItems, sortItems, paginate, renderPagination,
     statusBadge, priorityBadge, availBadge, roleBadge,
     emptyState,
-    validateEmail, validatePhone, validatePassword, checkDuplicateUser
+    validateEmail, validatePhone, validatePassword, checkDuplicateUser,
+    toggleNotificationsDropdown, handleNotificationClick, markAllNotificationsAsRead, updateUnreadCount, initNotifications
   };
 })();

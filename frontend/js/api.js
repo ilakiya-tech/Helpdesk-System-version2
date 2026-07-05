@@ -442,6 +442,85 @@ const API = {
     });
   },
 
+  // ── Attachments ────────────────────────────────────────────────────────────
+  async uploadAttachment(ticketId, file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const headers = {};
+    const token = this.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    
+    // We call fetch directly because _fetch defaults to JSON Content-Type
+    const resp = await fetch(`${this.baseURL}/tickets/${ticketId}/attachments`, {
+      method: 'POST',
+      headers,
+      body: fd
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ message: 'Upload failed' }));
+      throw new Error(err.message || 'Upload failed');
+    }
+    return resp.json();
+  },
+
+  async getAttachments(ticketId) {
+    return this._fetch(`/tickets/${ticketId}/attachments`, { headers: this._headers() });
+  },
+
+  async downloadAttachment(id, fileName) {
+    const resp = await fetch(`${this.baseURL}/attachments/download/${id}`, {
+      headers: this._headers()
+    });
+    if (!resp.ok) throw new Error('Failed to download attachment');
+    const blob = await resp.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName || 'attachment';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
+
+  // ── Notifications ──────────────────────────────────────────────────────────
+  async getNotifications() {
+    return this._fetch('/notifications', { headers: this._headers() });
+  },
+
+  async getUnreadNotificationsCount() {
+    return this._fetch('/notifications/unread-count', { headers: this._headers() });
+  },
+
+  async markNotificationAsRead(id) {
+    return this._fetch(`/notifications/${id}/read`, { method: 'PUT', headers: this._headers() });
+  },
+
+  async markAllNotificationsAsRead() {
+    return this._fetch('/notifications/read-all', { method: 'PUT', headers: this._headers() });
+  },
+
+  // ── Leave Requests ─────────────────────────────────────────────────────────
+  async submitLeaveRequest(data) {
+    return this._fetch('/leaves', {
+      method: 'POST',
+      headers: this._headers(),
+      body: JSON.stringify(data)
+    });
+  },
+
+  async getLeaveRequests() {
+    return this._fetch('/leaves', { headers: this._headers() });
+  },
+
+  async approveLeaveRequest(id) {
+    return this._fetch(`/leaves/${id}/approve`, { method: 'PUT', headers: this._headers() });
+  },
+
+  async rejectLeaveRequest(id) {
+    return this._fetch(`/leaves/${id}/reject`, { method: 'PUT', headers: this._headers() });
+  },
+
   // Legacy aliases kept for backward-compat (some pages may call them)
   async getStaff()          { return this.getStaffList(); },
   async addStaff(data)      { return this.createUser({ ...data, role: 'staff' }); },

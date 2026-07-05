@@ -34,6 +34,10 @@
         <div class="col-lg-7">
           <div class="detail-card">
             <div class="row g-3" id="ticket-fields"></div>
+            <div class="mt-4 border-top pt-3" id="ticket-attachments-section" style="display: none;">
+              <label class="form-label text-muted small fw-semibold mb-2">Attachments</label>
+              <div id="attachments-list" class="d-flex flex-column gap-2"></div>
+            </div>
             <div class="mt-4" id="status-actions"></div>
           </div>
           <div class="detail-card">
@@ -82,9 +86,41 @@
       document.getElementById('loading').classList.add('d-none');
       document.getElementById('content').classList.remove('d-none');
       renderTicket(currentTicket);
-      renderHistory(hr.history || currentTicket.history || []);
-      renderComments(cr.comments || currentTicket.comments || []);
+      renderHistory(hr.history || currentTicket.history || tr.history || []);
+      renderComments(cr.comments || currentTicket.comments || tr.comments || []);
+      renderAttachments(tr.attachments || currentTicket.attachments || []);
       checkHolidayWarning(currentTicket, holR.holidays || []);
+    }
+
+    function renderAttachments(attachments) {
+      const section = document.getElementById('ticket-attachments-section');
+      const list = document.getElementById('attachments-list');
+      if (!attachments || !attachments.length) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = 'block';
+      list.innerHTML = attachments.map(att => {
+        const sizeKb = Math.round(att.fileSize / 1024 * 10) / 10;
+        return `
+          <div class="d-flex align-items-center justify-content-between p-2 border rounded" style="background: #f8fafc; font-size: 0.85rem;">
+            <div class="d-flex align-items-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <span class="fw-semibold text-truncate" style="max-width: 200px;">${att.fileName}</span>
+              <span class="text-muted small">(${sizeKb} KB)</span>
+            </div>
+            <button class="btn btn-link btn-sm p-0 text-decoration-none fw-semibold" style="font-size: 0.8rem; color: var(--primary-color);" onclick="downloadAttachment(${att.id}, '${att.fileName.replace(/'/g, "\\'")}')">Download</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function downloadAttachment(id, name) {
+      try {
+        await API.downloadAttachment(id, name);
+      } catch (e) {
+        UI.toast('error', 'Download Failed', e.message || 'Could not download file');
+      }
     }
 
     function renderTicket(t) {

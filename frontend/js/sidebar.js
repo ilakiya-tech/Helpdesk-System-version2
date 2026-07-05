@@ -39,7 +39,11 @@ const Sidebar = {
           </div>
         </div>
         ${navHtml}
-        <div class="sidebar-footer">
+        <div class="sidebar-footer d-flex align-items-center gap-3">
+          <div class="position-relative" style="cursor: pointer; display: flex; align-items: center;" id="nav-notifications-btn" onclick="UI.toggleNotificationsDropdown(event)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="nav-notifications-badge" style="font-size: 0.6rem; padding: 3px 6px; transform: translate(-30%, -30%) !important; display: none;">0</span>
+          </div>
           <small class="opacity-75 text-white d-none d-sm-inline">User: <strong>${username}</strong></small>
           <button class="btn btn-outline-light btn-sm" style="padding: 4px 10px !important; font-size: 0.75rem !important; background: transparent !important; color: #fff !important; border-color: #fff !important;" onclick="logout()">Logout</button>
         </div>

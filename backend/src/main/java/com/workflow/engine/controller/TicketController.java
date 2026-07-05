@@ -29,9 +29,18 @@ import java.util.Map;
 public class TicketController {
 
     private final TicketService ticketService;
+    private final com.workflow.engine.service.EmailService emailService;
+    private final com.workflow.engine.service.NotificationService notificationService;
+    private final com.workflow.engine.repository.UserRepository userRepository;
 
-    public TicketController(TicketService ticketService) {
+    public TicketController(TicketService ticketService,
+                            com.workflow.engine.service.EmailService emailService,
+                            com.workflow.engine.service.NotificationService notificationService,
+                            com.workflow.engine.repository.UserRepository userRepository) {
         this.ticketService = ticketService;
+        this.emailService = emailService;
+        this.notificationService = notificationService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
@@ -52,6 +61,36 @@ public class TicketController {
                 ? ticket.getCustomerName()
                 : AppConstants.DEFAULT_CREATED_BY_NAME;
         Ticket saved = ticketService.createTicket(ticket, createdByName);
+
+        if (saved.getEmail() != null && !saved.getEmail().isBlank()) {
+            emailService.sendTicketCreatedEmail(
+                saved.getEmail(),
+                saved.getCustomerName(),
+                saved.getId(),
+                saved.getTitle(),
+                saved.getPriority()
+            );
+        }
+
+        userRepository.findByUsername(createdByName).ifPresent(u -> {
+            notificationService.createNotification(
+                u.getId(),
+                "Ticket Created",
+                "Your support ticket #" + saved.getId() + " (" + saved.getTitle() + ") was successfully created.",
+                "TICKET_CREATED",
+                saved.getId()
+            );
+        });
+
+        if ("High".equalsIgnoreCase(saved.getPriority()) || "Critical".equalsIgnoreCase(saved.getPriority())) {
+            notificationService.notifyAdmins(
+                "High Priority Ticket Waiting",
+                "Ticket #" + saved.getId() + " (" + saved.getTitle() + ") is waiting with priority: " + saved.getPriority(),
+                "HIGH_PRIORITY_WAITING",
+                saved.getId()
+            );
+        }
+
         return ResponseEntity.ok(saved);
     }
 
@@ -111,7 +150,56 @@ public class TicketController {
             @PathVariable Long id,
             @RequestBody @Valid StatusUpdateRequest request) {
         try {
+            Map<String, Object> oldDetail = ticketService.getTicketDetail(id);
+            String tempStatus = "Open";
+            if (oldDetail != null && oldDetail.get("ticket") != null) {
+                Ticket t = (Ticket) oldDetail.get("ticket");
+                tempStatus = t.getStatus();
+            }
+            final String oldStatus = tempStatus;
+
             Ticket updated = ticketService.updateStatus(id, request.status(), request.changedByName());
+
+            if (updated.getEmail() != null && !updated.getEmail().isBlank()) {
+                if ("Resolved".equalsIgnoreCase(updated.getStatus())) {
+                    emailService.sendTicketResolvedEmail(updated.getEmail(), updated.getCustomerName(), updated.getId(), updated.getTitle());
+                } else {
+                    emailService.sendTicketStatusChangedEmail(updated.getEmail(), updated.getCustomerName(), updated.getId(), updated.getTitle(), oldStatus, updated.getStatus());
+                }
+            }
+
+            userRepository.findByUsername(updated.getCustomerName()).ifPresent(u -> {
+                String title = "Resolved".equalsIgnoreCase(updated.getStatus()) ? "Ticket Resolved" : "Ticket Status Updated";
+                String msg = "Resolved".equalsIgnoreCase(updated.getStatus())
+                    ? "Your ticket #" + updated.getId() + " has been resolved."
+                    : "The status of ticket #" + updated.getId() + " has been changed to " + updated.getStatus() + ".";
+                notificationService.createNotification(u.getId(), title, msg, "Resolved".equalsIgnoreCase(updated.getStatus()) ? "TICKET_RESOLVED" : "TICKET_STATUS_CHANGED", updated.getId());
+            });
+
+            if (updated.getAssignedTo() != null) {
+                userRepository.findByUsername(updated.getAssignedTo()).ifPresent(staff -> {
+                    if (staff.getEmail() != null && !staff.getEmail().isBlank()) {
+                        emailService.sendTicketStatusChangedEmail(staff.getEmail(), staff.getName(), updated.getId(), updated.getTitle(), oldStatus, updated.getStatus());
+                    }
+                    notificationService.createNotification(
+                        staff.getId(),
+                        "Ticket Status Changed",
+                        "Ticket #" + updated.getId() + " assigned to you has changed status to " + updated.getStatus() + ".",
+                        "TICKET_STATUS_CHANGED",
+                        updated.getId()
+                    );
+                });
+            }
+
+            if ("BREACHED".equalsIgnoreCase(updated.getSlaStatus())) {
+                notificationService.notifyAdmins(
+                    "Ticket Overdue",
+                    "Ticket #" + updated.getId() + " has breached SLA.",
+                    "TICKET_OVERDUE",
+                    updated.getId()
+                );
+            }
+
             return ResponseEntity.ok(updated);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();
@@ -137,6 +225,29 @@ public class TicketController {
             @RequestBody @Valid AssignRequest request) {
         try {
             Ticket updated = ticketService.assignTicket(id, request.assignedTo(), request.changedByName());
+
+            java.util.Optional<com.workflow.engine.entity.User> staffOpt = userRepository.findByUsername(request.assignedTo());
+            if (staffOpt.isPresent()) {
+                com.workflow.engine.entity.User staff = staffOpt.get();
+                notificationService.createNotification(
+                    staff.getId(),
+                    "Ticket Assigned",
+                    "Ticket #" + updated.getId() + " (" + updated.getTitle() + ") has been assigned to you.",
+                    "TICKET_ASSIGNED",
+                    updated.getId()
+                );
+
+                if (staff.getEmail() != null && !staff.getEmail().isBlank()) {
+                    emailService.sendTicketAssignedEmail(
+                        staff.getEmail(),
+                        staff.getName(),
+                        updated.getId(),
+                        updated.getTitle(),
+                        updated.getPriority()
+                    );
+                }
+            }
+
             return ResponseEntity.ok(updated);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();

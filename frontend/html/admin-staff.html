@@ -40,6 +40,29 @@
                 </tbody>
             </table>
         </div></div>
+
+        <!-- Pending Leave Requests Panel -->
+        <h4 class="mb-3 mt-5 text-primary fw-bold">Leave Request Reviews</h4>
+        <div class="card mb-4"><div class="card-body table-responsive">
+            <table class="table table-hover mb-0" style="vertical-align: middle;">
+                <thead>
+                    <tr>
+                        <th>Staff Member</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-leaves-table">
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No leave requests pending</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div></div>
         
         <div class="card panel-hidden" id="staff-tickets-panel"><div class="card-body table-responsive">
             <h5 id="staff-tickets-title" class="fw-bold text-primary mb-3" style="font-size: 1rem;">Assigned Tickets</h5>
@@ -94,6 +117,7 @@ async function loadStaff() {
             <td><button class="btn btn-sm btn-outline-primary" style="background:transparent !important; color:var(--primary-color) !important" onclick="showTickets('${s.userId}','${s.name}')">View Tickets</button></td>
         </tr>`;
     }).join('');
+    loadLeaveReviews();
 }
 
 async function setAvail(id, val, selectEl) {
@@ -148,7 +172,98 @@ async function reassign(ticketId, staffId, selectEl) {
     });
 }
 
-loadStaff();
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        async function loadLeaveReviews() {
+            try {
+                const tableBody = document.getElementById('admin-leaves-table');
+                const r = await API.getLeaveRequests();
+                if (r.success) {
+                    const list = r.items || r.content || r._raw || [];
+                    if (!list.length) {
+                        tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No leave requests found</td></tr>';
+                        return;
+                    }
+                    
+                    tableBody.innerHTML = list.map(req => {
+                        const staff = allStaff.find(s => String(s.userId) === String(req.userId));
+                        const staffName = staff ? staff.name : 'Unknown (' + req.userId + ')';
+                        
+                        let statusColor = '#64748b';
+                        if (req.status === 'APPROVED') statusColor = '#16a34a';
+                        if (req.status === 'REJECTED') statusColor = '#dc2626';
+                        const badge = `<span style="background:${statusColor}1a;color:${statusColor};padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600">${req.status}</span>`;
+                        
+                        let actionHtml = '';
+                        if (req.status === 'PENDING') {
+                            actionHtml = `
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-success" style="border-radius:4px;" onclick="approveLeave(${req.id}, this)">Approve</button>
+                                    <button class="btn btn-sm btn-danger" style="border-radius:4px;" onclick="rejectLeave(${req.id}, this)">Reject</button>
+                                </div>
+                            `;
+                        } else {
+                            actionHtml = `<span class="text-muted small">Reviewed</span>`;
+                        }
+                        
+                        return `<tr>
+                            <td class="fw-semibold">${staffName}</td>
+                            <td>${req.leaveType}</td>
+                            <td>${formatDate(req.startDate)}</td>
+                            <td>${formatDate(req.endDate)}</td>
+                            <td style="max-width: 200px;" class="text-truncate" title="${req.reason.replace(/"/g, '&quot;')}">${escapeHtml(req.reason)}</td>
+                            <td>${badge}</td>
+                            <td>${actionHtml}</td>
+                        </tr>`;
+                    }).join('');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function approveLeave(id, btn) {
+            if (btn) btn.disabled = true;
+            await UI.blockDuplicate('leave-review-' + id, async () => {
+                const r = await API.approveLeaveRequest(id);
+                if (r.success) {
+                    UI.toast('success', 'Success', 'Leave request approved successfully');
+                    loadStaff();
+                } else {
+                    UI.toast('error', 'Error', r.message || 'Failed to approve leave request');
+                    if (btn) btn.disabled = false;
+                }
+            });
+        }
+
+        async function rejectLeave(id, btn) {
+            if (btn) btn.disabled = true;
+            await UI.blockDuplicate('leave-review-' + id, async () => {
+                const r = await API.rejectLeaveRequest(id);
+                if (r.success) {
+                    UI.toast('success', 'Success', 'Leave request rejected successfully');
+                    loadStaff();
+                } else {
+                    UI.toast('error', 'Error', r.message || 'Failed to reject leave request');
+                    if (btn) btn.disabled = false;
+                }
+            });
+        }
+
+        loadStaff();
 </script>
 </body>
 </html>

@@ -97,8 +97,75 @@
                     </tbody>
                 </table>
             </div>
+            
+            <h4 class="mb-3 mt-5 text-primary fw-bold">My Leave Requests</h4>
+            <div class="card mb-5">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" style="vertical-align: middle;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leave-list">
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No leave requests found</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
+</div>
+
+<!-- Leave Request Modal -->
+<div class="modal fade" id="leaveRequestModal" tabindex="-1" aria-labelledby="leaveRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius:12px; border:none; box-shadow:0 10px 25px rgba(0,0,0,0.15);">
+            <div class="modal-header" style="background:#1F3373; color:#fff; border-top-left-radius:12px; border-top-right-radius:12px; padding:16px 24px;">
+                <h5 class="modal-title fw-bold" id="leaveRequestModalLabel">Submit Leave Request</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding:24px;">
+                <form id="leave-request-form">
+                    <div class="mb-3">
+                        <label for="leave-type" class="form-label fw-semibold text-muted small">Leave Type</label>
+                        <select class="form-select" id="leave-type" required>
+                            <option value="">Select type</option>
+                            <option value="Annual">Annual Leave</option>
+                            <option value="Sick">Sick Leave</option>
+                            <option value="Casual">Casual Leave</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label for="leave-start" class="form-label fw-semibold text-muted small">Start Date</label>
+                            <input type="date" class="form-control" id="leave-start" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="leave-end" class="form-label fw-semibold text-muted small">End Date</label>
+                            <input type="date" class="form-control" id="leave-end" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="leave-reason" class="form-label fw-semibold text-muted small">Reason</label>
+                        <textarea class="form-control" id="leave-reason" rows="3" placeholder="Brief reason for leave..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius:6px;">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="leave-submit-btn" style="border-radius:6px; background:#1F3373;">Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
     <script src="../js/api.js"></script>
@@ -113,6 +180,8 @@
         Sidebar.inject('staff', 'staff.html');
 
         let allTickets = [];
+        let currentAvailability = 'available';
+        const leaveModal = new bootstrap.Modal(document.getElementById('leaveRequestModal'));
 
         async function loadAvailability() {
             const uid = localStorage.getItem('userId');
@@ -122,9 +191,9 @@
                 const cur = list.find(s => String(s.userId) === String(uid));
                 if (cur) {
                     document.getElementById('staff-name-display').textContent = cur.name || localStorage.getItem('name') || 'Field Staff';
-                    const av = cur.availability || 'available';
-                    document.getElementById('avail-select').value = av;
-                    updateAvailBadge(av);
+                    currentAvailability = cur.availability || 'available';
+                    document.getElementById('avail-select').value = currentAvailability;
+                    updateAvailBadge(currentAvailability);
                 } else {
                     document.getElementById('staff-name-display').textContent = localStorage.getItem('name') || 'Field Staff';
                     updateAvailBadge('available');
@@ -137,14 +206,22 @@
         }
 
         document.getElementById('avail-select').addEventListener('change', async e => {
-            const uid = localStorage.getItem('userId');
             const select = e.target;
+            const val = select.value;
+            
+            if (val === 'on_leave') {
+                select.value = currentAvailability;
+                leaveModal.show();
+                return;
+            }
+
             select.disabled = true;
             await UI.blockDuplicate('avail-change', async () => {
-                const val = select.value;
+                const uid = localStorage.getItem('userId');
                 const r = await API.updateStaffAvailability(uid, val);
                 select.disabled = false;
                 if (r.success) {
+                    currentAvailability = val;
                     UI.toast('success', 'Success', `Status updated to ${val.replace('_',' ')}`);
                     updateAvailBadge(val);
                 } else {
@@ -152,6 +229,70 @@
                 }
             });
         });
+
+        document.getElementById('leave-request-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const btn = document.getElementById('leave-submit-btn');
+            const leaveType = document.getElementById('leave-type').value;
+            const startDate = document.getElementById('leave-start').value;
+            const endDate = document.getElementById('leave-end').value;
+            const reason = document.getElementById('leave-reason').value;
+
+            await UI.blockDuplicate('submit-leave', async () => {
+                UI.setLoading(btn, true, 'Submitting…');
+                try {
+                    const r = await API.submitLeaveRequest({ leaveType, startDate, endDate, reason });
+                    UI.setLoading(btn, false);
+                    if (r.success) {
+                        UI.toast('success', 'Leave Request Submitted', 'Your leave request has been submitted for admin approval.');
+                        leaveModal.hide();
+                        document.getElementById('leave-request-form').reset();
+                        loadLeaveRequests();
+                    } else {
+                        UI.toast('error', 'Submission Failed', r.message || 'Could not submit leave request.');
+                    }
+                } catch (err) {
+                    UI.setLoading(btn, false);
+                    UI.toast('error', 'Submission Failed', err.message || 'Could not submit leave request.');
+                }
+            });
+        });
+
+        async function loadLeaveRequests() {
+            try {
+                const el = document.getElementById('leave-list');
+                const r = await API.getLeaveRequests();
+                if (r.success) {
+                    const list = r.items || r.content || r._raw || [];
+                    if (!list.length) {
+                        el.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No leave requests found</td></tr>';
+                        return;
+                    }
+                    el.innerHTML = list.map(req => {
+                        let statusColor = '#64748b';
+                        if (req.status === 'APPROVED') statusColor = '#16a34a';
+                        if (req.status === 'REJECTED') statusColor = '#dc2626';
+                        const badge = `<span style="background:${statusColor}1a;color:${statusColor};padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600">${req.status}</span>`;
+                        return `
+                            <tr>
+                                <td class="fw-semibold">${req.leaveType}</td>
+                                <td>${formatDate(req.startDate)}</td>
+                                <td>${formatDate(req.endDate)}</td>
+                                <td>${escapeHtml(req.reason)}</td>
+                                <td>${badge}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
 
         async function loadTickets() {
             try {
@@ -247,6 +388,7 @@
 
         loadAvailability();
         loadTickets();
+        loadLeaveRequests();
     </script>
 </body>
 </html>
