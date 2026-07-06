@@ -15,11 +15,8 @@ import com.workflow.engine.config.AppConstants;
 @Entity
 @Table(name = "tickets", indexes = {
     @Index(name = "idx_tickets_status", columnList = "status"),
-    @Index(name = "idx_tickets_sla_status", columnList = "slaStatus"),
     @Index(name = "idx_tickets_priority", columnList = "priority"),
     @Index(name = "idx_tickets_assigned_to", columnList = "assignedTo"),
-    @Index(name = "idx_tickets_response_sla_deadline", columnList = "responseSlaDeadline"),
-    @Index(name = "idx_tickets_resolution_sla_deadline", columnList = "resolutionSlaDeadline"),
     @Index(name = "idx_tickets_created_at", columnList = "createdAt")
 })
 public class Ticket {
@@ -68,15 +65,7 @@ public class Ticket {
 
     private LocalDateTime assignedAt;
     
-    private LocalDateTime firstRespondedAt;
-    
     private LocalDateTime resolvedAt;
-    
-    private LocalDateTime responseSlaDeadline;
-    
-    private LocalDateTime resolutionSlaDeadline;
-    
-    private String slaStatus;
 
     @Column(name = "created_by_name")
     private String createdByName;
@@ -200,44 +189,12 @@ public class Ticket {
         this.assignedAt = assignedAt;
     }
 
-    public LocalDateTime getFirstRespondedAt() {
-        return firstRespondedAt;
-    }
-
-    public void setFirstRespondedAt(LocalDateTime firstRespondedAt) {
-        this.firstRespondedAt = firstRespondedAt;
-    }
-
     public LocalDateTime getResolvedAt() {
         return resolvedAt;
     }
 
     public void setResolvedAt(LocalDateTime resolvedAt) {
         this.resolvedAt = resolvedAt;
-    }
-
-    public LocalDateTime getResponseSlaDeadline() {
-        return responseSlaDeadline;
-    }
-
-    public void setResponseSlaDeadline(LocalDateTime responseSlaDeadline) {
-        this.responseSlaDeadline = responseSlaDeadline;
-    }
-
-    public LocalDateTime getResolutionSlaDeadline() {
-        return resolutionSlaDeadline;
-    }
-
-    public void setResolutionSlaDeadline(LocalDateTime resolutionSlaDeadline) {
-        this.resolutionSlaDeadline = resolutionSlaDeadline;
-    }
-
-    public String getSlaStatus() {
-        return slaStatus;
-    }
-
-    public void setSlaStatus(String slaStatus) {
-        this.slaStatus = slaStatus;
     }
 
     public String getCreatedByName() {
@@ -255,16 +212,5 @@ public class Ticket {
     public void setActivityHistory(java.util.List<ActivityHistory> activityHistory) {
         this.activityHistory = activityHistory;
     }
-
-    @Transient
-    public Long getRemainingTime() {
-        if (AppConstants.STATUS_RESOLVED.equals(status) || "Closed".equals(status)) {
-            return null;
-        }
-        LocalDateTime activeDeadline = (firstRespondedAt == null) ? responseSlaDeadline : resolutionSlaDeadline;
-        if (activeDeadline == null) {
-            return null;
-        }
-        return java.time.Duration.between(LocalDateTime.now(), activeDeadline).toMinutes();
-    }
 }
+

@@ -128,10 +128,9 @@ public class LeaveRequestController {
             request.setReviewedAt(LocalDateTime.now());
             leaveRequestRepository.save(request);
 
-            // 1. Update staff availability to "on_leave"
+            // 1. Update staff availability dynamically based on current date
             userRepository.findById(request.getUserId()).ifPresent(staff -> {
-                staff.setAvailability("on_leave");
-                userRepository.save(staff);
+                availabilityScheduler.syncUserAvailability(staff, LocalDate.now());
 
                 // 1b. Check if the staff member has active tickets and notify admin
                 List<Ticket> activeTickets = ticketRepository.findByStatusNotIn(List.of("Resolved", "Closed")).stream()

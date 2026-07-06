@@ -115,19 +115,16 @@ public class TicketController {
     @GetMapping
     @PreAuthorize("hasAnyRole('CONSUMER', 'STAFF', 'ADMIN')")
     @Operation(
-        summary = "Get all sorted tickets (Paginated)",
-        description = "Retrieves all active, non-resolved tickets sorted in real-time by the in-memory Max-Heap priority. Supports optional page and size parameters.",
+        summary = "Get all sorted tickets",
+        description = "Retrieves all active, non-resolved tickets sorted in real-time by the in-memory Max-Heap priority.",
         security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Successfully retrieved tickets"),
         @ApiResponse(responseCode = "401", description = "Missing or invalid authorization header")
     })
-    public ResponseEntity<Page<Ticket>> getAllTicketsSortedByPriority(
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size,
+    public ResponseEntity<List<Ticket>> getAllTicketsSortedByPriority(
             @RequestParam(required = false, defaultValue = "false") boolean active) {
-        Pageable pageable = (page != null && size != null) ? PageRequest.of(page, size) : PageRequest.of(0, 10000);
         
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Optional<User> userOpt = userRepository.findByUsername(username);
@@ -162,19 +159,12 @@ public class TicketController {
                     .collect(Collectors.toList());
         }
 
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), filtered.size());
-        List<Ticket> pageContent = new ArrayList<>();
-        if (start < filtered.size()) {
-            pageContent = filtered.subList(start, end);
-        }
-
-        // Pre-populate transient activityHistory for each ticket in the current page
-        for (Ticket t : pageContent) {
+        // Pre-populate transient activityHistory for each ticket
+        for (Ticket t : filtered) {
             t.setActivityHistory(activityHistoryRepository.findByTicketIdOrderByCreatedAtAsc(t.getId()));
         }
 
-        return ResponseEntity.ok(new org.springframework.data.domain.PageImpl<>(pageContent, pageable, filtered.size()));
+        return ResponseEntity.ok(filtered);
     }
 
     @GetMapping("/{id}")
@@ -287,14 +277,7 @@ public class TicketController {
                 });
             }
 
-            if ("BREACHED".equalsIgnoreCase(updated.getSlaStatus())) {
-                notificationService.notifyAdmins(
-                    "Ticket Overdue",
-                    "Ticket #" + updated.getId() + " has breached SLA.",
-                    "TICKET_OVERDUE",
-                    updated.getId()
-                );
-            }
+
 
             return ResponseEntity.ok(updated);
         } catch (ResourceNotFoundException e) {
@@ -316,7 +299,7 @@ public class TicketController {
         @ApiResponse(responseCode = "403", description = "Insufficient permissions"),
         @ApiResponse(responseCode = "404", description = "Ticket not found")
     })
-    public ResponseEntity<Ticket> assignTicket(
+    public ResponseEntity<?> assignTicket(
             @PathVariable Long id,
             @RequestBody @Valid AssignRequest request) {
         try {
@@ -358,6 +341,8 @@ public class TicketController {
             return ResponseEntity.ok(updated);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
         }
     }
 

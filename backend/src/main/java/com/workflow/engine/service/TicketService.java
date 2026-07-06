@@ -1,7 +1,6 @@
 package com.workflow.engine.service;
 
 import com.workflow.engine.config.AppConstants;
-import com.workflow.engine.config.SlaProperties;
 import com.workflow.engine.dsa.MaxHeapEngine;
 import com.workflow.engine.dsa.TrieEngine;
 import com.workflow.engine.entity.ActivityHistory;
@@ -32,10 +31,6 @@ import org.slf4j.LoggerFactory;
  * pattern: commit the DB transaction first (source of truth), then apply
  * the equivalent mutation to the in-memory structures so reads stay fast
  * and consistent without ever hitting the database.
- *
- * Phase 4: SLA deadlines are automatically calculated from priority rules
- * on ticket creation. The escalationSweep() scheduler updates slaStatus
- * for all active tickets every minute.
  */
 @Service
 public class TicketService {
@@ -47,7 +42,6 @@ public class TicketService {
     private final ActivityHistoryRepository activityHistoryRepository;
     private final MaxHeapEngine maxHeapEngine;
     private final TrieEngine trieEngine;
-    private final SlaProperties slaProperties;
     private final com.workflow.engine.repository.AttachmentRepository attachmentRepository;
     private final UserRepository userRepository;
 
@@ -56,7 +50,6 @@ public class TicketService {
                           ActivityHistoryRepository activityHistoryRepository,
                           MaxHeapEngine maxHeapEngine,
                           TrieEngine trieEngine,
-                          SlaProperties slaProperties,
                           com.workflow.engine.repository.AttachmentRepository attachmentRepository,
                           UserRepository userRepository) {
         this.ticketRepository = ticketRepository;
@@ -64,7 +57,6 @@ public class TicketService {
         this.activityHistoryRepository = activityHistoryRepository;
         this.maxHeapEngine = maxHeapEngine;
         this.trieEngine = trieEngine;
-        this.slaProperties = slaProperties;
         this.attachmentRepository = attachmentRepository;
         this.userRepository = userRepository;
     }
@@ -89,70 +81,6 @@ public class TicketService {
     }
 
     // -------------------------------------------------------------------------
-    // SLA Helper Methods
-    // -------------------------------------------------------------------------
-
-    /**
-     * Returns the SLA rule for the given priority (case-insensitive).
-     * Falls back to Low if the priority is unknown.
-     */
-    private SlaProperties.Rule getSlaRule(String priority) {
-        if (priority == null) return slaProperties.getRules().getOrDefault("low", defaultRule());
-        return slaProperties.getRules().getOrDefault(priority.toLowerCase(), defaultRule());
-    }
-
-    private SlaProperties.Rule defaultRule() {
-        SlaProperties.Rule r = new SlaProperties.Rule();
-        r.setResponseMinutes(480);
-        r.setResolutionMinutes(4320);
-        return r;
-    }
-
-    /**
-     * Determines and sets the SLA status for an active ticket.
-     * Must NOT be called for resolved or closed tickets (their SLA is frozen).
-     */
-    private void recalculateSlaStatus(Ticket ticket) {
-        boolean isTerminal = AppConstants.STATUS_RESOLVED.equals(ticket.getStatus())
-                || "Closed".equals(ticket.getStatus());
-        if (isTerminal) return; // SLA frozen once resolved/closed
-
-        LocalDateTime now = LocalDateTime.now();
-        SlaProperties.Rule rule = getSlaRule(ticket.getPriority());
-
-        LocalDateTime activeDeadline;
-        int totalMinutes;
-
-        if (ticket.getFirstRespondedAt() == null) {
-            // Still awaiting first response — measure against response deadline
-            activeDeadline = ticket.getResponseSlaDeadline();
-            totalMinutes = rule.getResponseMinutes();
-        } else {
-            // Responded — now measuring against resolution deadline
-            activeDeadline = ticket.getResolutionSlaDeadline();
-            totalMinutes = rule.getResolutionMinutes();
-        }
-
-        if (activeDeadline == null) {
-            ticket.setSlaStatus(AppConstants.SLA_STATUS_IN_SLA);
-            return;
-        }
-
-        long remainingMinutes = Duration.between(now, activeDeadline).toMinutes();
-
-        if (remainingMinutes < 0) {
-            ticket.setSlaStatus(AppConstants.SLA_STATUS_BREACHED);
-        } else {
-            double ratio = (double) remainingMinutes / totalMinutes;
-            if (ratio <= 0.20) {
-                ticket.setSlaStatus(AppConstants.SLA_STATUS_AT_RISK);
-            } else {
-                ticket.setSlaStatus(AppConstants.SLA_STATUS_IN_SLA);
-            }
-        }
-    }
-
-    // -------------------------------------------------------------------------
     // Ticket CRUD Operations
     // -------------------------------------------------------------------------
 
@@ -163,12 +91,6 @@ public class TicketService {
             ticket.setStatus(AppConstants.STATUS_OPEN);
         }
         ticket.setPriorityWeight(computePriorityWeight(ticket));
-
-        // Calculate SLA deadlines from priority rules
-        SlaProperties.Rule rule = getSlaRule(ticket.getPriority());
-        ticket.setResponseSlaDeadline(ticket.getCreatedAt().plusMinutes(rule.getResponseMinutes()));
-        ticket.setResolutionSlaDeadline(ticket.getCreatedAt().plusMinutes(rule.getResolutionMinutes()));
-        ticket.setSlaStatus(AppConstants.SLA_STATUS_IN_SLA);
 
         Ticket saved = ticketRepository.save(ticket);
 
@@ -275,28 +197,8 @@ public class TicketService {
         boolean isTerminalNow = AppConstants.STATUS_RESOLVED.equals(newStatus)
                 || AppConstants.STATUS_CLOSED.equals(newStatus);
 
-        // First response tracking: moving to In Progress counts as first response
-        if (AppConstants.STATUS_IN_PROGRESS.equals(newStatus) && ticket.getFirstRespondedAt() == null) {
-            ticket.setFirstRespondedAt(LocalDateTime.now());
-            if (ticket.getResponseSlaDeadline() != null
-                    && LocalDateTime.now().isAfter(ticket.getResponseSlaDeadline())) {
-                ticket.setSlaStatus(AppConstants.SLA_STATUS_BREACHED);
-            }
-        }
-
-        // Freeze SLA when ticket is resolved or closed
         if (isTerminalNow) {
             ticket.setResolvedAt(LocalDateTime.now());
-            if (!AppConstants.SLA_STATUS_BREACHED.equals(ticket.getSlaStatus())) {
-                if (ticket.getResolutionSlaDeadline() != null
-                        && LocalDateTime.now().isAfter(ticket.getResolutionSlaDeadline())) {
-                    ticket.setSlaStatus(AppConstants.SLA_STATUS_BREACHED);
-                } else {
-                    ticket.setSlaStatus(AppConstants.SLA_STATUS_IN_SLA);
-                }
-            }
-        } else {
-            recalculateSlaStatus(ticket);
         }
 
         Ticket saved = ticketRepository.save(ticket);
@@ -313,11 +215,6 @@ public class TicketService {
         return saved;
     }
 
-    /**
-     * Validates that a status transition follows the allowed workflow.
-     * Open -> Assigned -> In Progress -> Resolved -> Closed
-     * Throws IllegalArgumentException for invalid transitions.
-     */
     private void validateStatusTransition(String current, String next) {
         java.util.Set<String> allowed = new java.util.HashSet<>();
         switch (current) {
@@ -391,22 +288,6 @@ public class TicketService {
 
     @Transactional
     public Comment addComment(Long ticketId, String authorName, String text) {
-        Ticket ticket = ticketRepository.findById(ticketId).orElse(null);
-        if (ticket != null) {
-            boolean isTerminal = AppConstants.STATUS_RESOLVED.equals(ticket.getStatus())
-                    || "Closed".equals(ticket.getStatus());
-            // Adding a comment is treated as a first response (by staff or admin)
-            if (!isTerminal && ticket.getFirstRespondedAt() == null) {
-                ticket.setFirstRespondedAt(LocalDateTime.now());
-                // Check if response SLA was breached when first comment was added
-                if (ticket.getResponseSlaDeadline() != null
-                        && LocalDateTime.now().isAfter(ticket.getResponseSlaDeadline())) {
-                    ticket.setSlaStatus(AppConstants.SLA_STATUS_BREACHED);
-                }
-                ticketRepository.save(ticket);
-            }
-        }
-
         Comment comment = new Comment();
         comment.setTicketId(ticketId);
         comment.setAuthorName(authorName);
@@ -422,7 +303,7 @@ public class TicketService {
     }
 
     /**
-     * Derives the Max-Heap ordering key from ticket priority + closeness to SLA deadline.
+     * Derives the Max-Heap ordering key from ticket priority + closeness to due date.
      */
     private int computePriorityWeight(Ticket ticket) {
         int base;
@@ -433,15 +314,11 @@ public class TicketService {
             default                             -> base = 100;
         }
 
-        // Escalate priority weight based on resolution SLA deadline (not just generic dueDate)
-        LocalDateTime deadline = ticket.getResolutionSlaDeadline() != null
-                ? ticket.getResolutionSlaDeadline()
-                : ticket.getDueDate();
-
+        LocalDateTime deadline = ticket.getDueDate();
         if (deadline != null) {
             Duration untilDue = Duration.between(LocalDateTime.now(), deadline);
             if (untilDue.isNegative()) {
-                base += 100; // overdue / breached
+                base += 100; // overdue
             } else if (untilDue.toHours() <= 4) {
                 base += 50;  // due within 4 hours
             } else if (untilDue.toHours() <= 24) {
@@ -453,14 +330,11 @@ public class TicketService {
 
     /**
      * Background escalation sweep — runs every 60 seconds.
-     * 1. Recomputes priority weights for in-memory heap ordering.
-     * 2. Recalculates SLA status for all active (non-resolved, non-closed) tickets.
-     * Resolved and closed tickets are skipped — their SLA is frozen.
+     * Recomputes priority weights for in-memory heap ordering.
      */
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void escalationSweep() {
-        // Exclude both Resolved and Closed from SLA recalculation
         List<Ticket> active = ticketRepository.findByStatusNotIn(
                 List.of(AppConstants.STATUS_RESOLVED, AppConstants.STATUS_CLOSED)
         );
@@ -468,11 +342,6 @@ public class TicketService {
             int recomputed = computePriorityWeight(ticket);
             if (recomputed != ticket.getPriorityWeight()) {
                 ticket.setPriorityWeight(recomputed);
-            }
-            String oldSlaStatus = ticket.getSlaStatus();
-            recalculateSlaStatus(ticket);
-            if (recomputed != ticket.getPriorityWeight()
-                    || !Objects.equals(oldSlaStatus, ticket.getSlaStatus())) {
                 ticketRepository.save(ticket);
             }
             maxHeapEngine.increaseKey(ticket.getId(), recomputed);

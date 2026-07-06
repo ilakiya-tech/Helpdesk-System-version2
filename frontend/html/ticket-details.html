@@ -126,28 +126,6 @@
     function renderTicket(t) {
       const estDays = priorityDays[t.priority] || 3;
 
-      // SLA badge
-      const slaColors = { 'IN SLA': '#16a34a', 'AT RISK': '#ea580c', 'BREACHED': '#dc2626' };
-      const slaColor = slaColors[t.slaStatus] || '#6b7280';
-      const slaBadge = t.slaStatus
-        ? `<span style="background:${slaColor};color:#fff;padding:3px 12px;border-radius:20px;font-size:.75rem;font-weight:600">${t.slaStatus}</span>`
-        : '<span class="text-muted">N/A</span>';
-
-      // Remaining time
-      const remainingMin = t.remainingTime;
-      let remainingHtml = '<span class="text-muted">N/A</span>';
-      if (remainingMin !== null && remainingMin !== undefined) {
-        const isOverdue = remainingMin < 0;
-        const absMin = Math.abs(remainingMin);
-        const h = Math.floor(absMin / 60), m = absMin % 60;
-        const label = isOverdue
-          ? `<span style="color:#dc2626;font-weight:600">Overdue by ${h > 0 ? h + 'h ' : ''}${m}m</span>`
-          : `<span style="color:${slaColor};font-weight:600">${h > 0 ? h + 'h ' : ''}${m}m remaining</span>`;
-        remainingHtml = label;
-      } else if (t.status === 'Resolved' || t.status === 'Closed') {
-        remainingHtml = '<span class="text-success fw-semibold">Completed</span>';
-      }
-
       const fields = [
         ['Ticket ID', '#' + t.id],
         ['Title', t.title],
@@ -161,12 +139,6 @@
         ['Date Assigned', t.assignedAt ? fmt(t.assignedAt) : 'Not yet assigned'],
         ['Last Updated', fmt(t.updatedAt || t.createdAt)],
         ['Due Date', t.dueDate ? fmt(t.dueDate) : 'N/A'],
-        // SLA Fields
-        ['SLA Status', slaBadge],
-        ['Remaining Time', remainingHtml],
-        ['Response Deadline', t.responseSlaDeadline ? fmt(t.responseSlaDeadline) : 'N/A'],
-        ['Resolution Deadline', t.resolutionSlaDeadline ? fmt(t.resolutionSlaDeadline) : 'N/A'],
-        ['First Response At', t.firstRespondedAt ? fmt(t.firstRespondedAt) : 'Awaiting response'],
         ['Resolved At', t.resolvedAt ? fmt(t.resolvedAt) : 'Not yet resolved']
       ];
       document.getElementById('ticket-fields').innerHTML = fields.map(([l,v]) =>

@@ -14,3 +14,10 @@ ALTER TABLE tickets ADD COLUMN IF NOT EXISTS created_by_name VARCHAR(255);
 
 -- Enable user active/disabled status
 ALTER TABLE users ADD COLUMN IF NOT EXISTS enabled BOOLEAN DEFAULT TRUE;
+
+-- Drop SLA fields from tickets table
+ALTER TABLE tickets DROP COLUMN IF EXISTS response_sla_deadline;
+ALTER TABLE tickets DROP COLUMN IF EXISTS resolution_sla_deadline;
+ALTER TABLE tickets DROP COLUMN IF EXISTS sla_status;
+ALTER TABLE tickets DROP COLUMN IF EXISTS first_responded_at;
+

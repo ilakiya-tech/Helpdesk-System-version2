@@ -1,7 +1,6 @@
 package com.workflow.engine.service;
 
 import com.workflow.engine.config.AppConstants;
-import com.workflow.engine.config.SlaProperties;
 import com.workflow.engine.entity.Ticket;
 import com.workflow.engine.entity.User;
 import com.workflow.engine.repository.TicketRepository;
@@ -39,7 +38,7 @@ public class TicketServiceTest {
     }
 
     @Test
-    public void testTicketCreationAndSlaDeadline() {
+    public void testTicketCreation() {
         Ticket ticket = new Ticket();
         ticket.setTitle("Critical Database Outage");
         ticket.setPriority(AppConstants.PRIORITY_CRITICAL);
@@ -49,33 +48,23 @@ public class TicketServiceTest {
         Ticket saved = ticketService.createTicket(ticket, "TestAdmin");
 
         assertNotNull(saved.getId());
-        assertNotNull(saved.getResponseSlaDeadline());
-        assertNotNull(saved.getResolutionSlaDeadline());
-        assertEquals(AppConstants.SLA_STATUS_IN_SLA, saved.getSlaStatus());
-
-        // For Critical: response deadline is 30 mins, resolution deadline is 240 mins (4 hours)
-        long responseDiff = java.time.Duration.between(saved.getCreatedAt(), saved.getResponseSlaDeadline()).toMinutes();
-        long resolutionDiff = java.time.Duration.between(saved.getCreatedAt(), saved.getResolutionSlaDeadline()).toMinutes();
-
-        assertEquals(30, responseDiff);
-        assertEquals(240, resolutionDiff);
+        assertEquals("Critical Database Outage", saved.getTitle());
+        assertEquals(AppConstants.PRIORITY_CRITICAL, saved.getPriority());
     }
 
     @Test
-    public void testFirstResponseTrackingAndSlaBreach() {
+    public void testStatusTracking() {
         Ticket ticket = new Ticket();
         ticket.setTitle("Low priority ticket");
         ticket.setPriority(AppConstants.PRIORITY_LOW);
         ticket.setStatus(AppConstants.STATUS_OPEN);
 
         Ticket saved = ticketService.createTicket(ticket, "Customer");
-        assertNull(saved.getFirstRespondedAt());
+        assertEquals(AppConstants.STATUS_OPEN, saved.getStatus());
 
-        // Update status to In Progress to record first response
+        // Update status to In Progress
         Ticket updated = ticketService.updateStatus(saved.getId(), AppConstants.STATUS_IN_PROGRESS, "StaffUser");
-
-        assertNotNull(updated.getFirstRespondedAt());
-        assertTrue(updated.getFirstRespondedAt().isAfter(saved.getCreatedAt()) || updated.getFirstRespondedAt().isEqual(saved.getCreatedAt()));
+        assertEquals(AppConstants.STATUS_IN_PROGRESS, updated.getStatus());
     }
 
     @Test
@@ -96,27 +85,6 @@ public class TicketServiceTest {
     }
 
     @Test
-    public void testEscalationSweepUpdatesStatusesAndWeights() {
-        Ticket ticket = new Ticket();
-        ticket.setTitle("Immediate Breach Ticket");
-        ticket.setPriority(AppConstants.PRIORITY_CRITICAL);
-        ticket.setStatus(AppConstants.STATUS_OPEN);
-
-        Ticket saved = ticketService.createTicket(ticket, "Customer");
-
-        // Backdate SLA deadlines to simulate breach
-        saved.setResponseSlaDeadline(LocalDateTime.now().minusMinutes(5));
-        saved.setResolutionSlaDeadline(LocalDateTime.now().minusMinutes(10));
-        ticketRepository.saveAndFlush(saved);
-
-        // Run sweep manually
-        ticketService.escalationSweep();
-
-        Ticket swept = ticketRepository.findById(saved.getId()).orElseThrow();
-        assertEquals(AppConstants.SLA_STATUS_BREACHED, swept.getSlaStatus());
-    }
-
-    @Test
     public void testAssignTicketToUnavailableStaffThrowsException() {
         // Create an unavailable staff user
         User staff = new User();
@@ -128,7 +96,7 @@ public class TicketServiceTest {
         userRepository.save(staff);
 
         Ticket ticket = new Ticket();
-        ticket.setTitle("SLA Test Ticket");
+        ticket.setTitle("Test Ticket");
         ticket.setPriority(AppConstants.PRIORITY_MEDIUM);
         ticket.setStatus(AppConstants.STATUS_OPEN);
         Ticket saved = ticketService.createTicket(ticket, "Customer");

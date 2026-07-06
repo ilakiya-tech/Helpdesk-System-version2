@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SLA Reports - Carbochem Helpdesk</title>
-    <meta name="description" content="Carbochem Helpdesk SLA compliance reports and ticket analytics">
+    <title>Helpdesk Reports - Carbochem Helpdesk</title>
+    <meta name="description" content="Carbochem Helpdesk ticket distribution and staff performance reports">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../css/sidebar.css" rel="stylesheet">
@@ -35,10 +35,6 @@
         .metric-card .label { font-size: 0.85rem; color: var(--text-gray); margin: 0.25rem 0 0; }
         .chart-container { background: var(--white); border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 1.5rem; border: 1px solid var(--border-color); }
         .section-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-gray); margin-bottom: 0.75rem; }
-        .sla-badge { display:inline-block; padding: 2px 10px; border-radius: 4px; font-size: .75rem; font-weight: 600; color: #fff; }
-        .sla-in     { background: #16a34a; }
-        .sla-risk   { background: #ea580c; }
-        .sla-breach { background: #dc2626; }
         @media (max-width:768px) { .chart-container canvas { max-height: 260px; } }
     </style>
 </head>
@@ -47,109 +43,91 @@
     <header id="sidebar-container"></header>
     <div class="flex-grow-1 main-content p-4">
         <div class="d-flex align-items-center justify-content-between mb-4">
-            <h1 class="h4 fw-bold mb-0 text-primary">SLA Reports & Analytics</h1>
+            <h1 class="h4 fw-bold mb-0 text-primary">Helpdesk Reports & Analytics</h1>
             <a href="admin.html" class="btn btn-sm btn-primary">← Dashboard</a>
         </div>
 
         <!-- Compliance Rate Metrics -->
-        <p class="section-title">SLA Compliance</p>
+        <p class="section-title">Helpdesk Overview</p>
         <div class="row g-3 mb-4">
-            <div class="col-6 col-md-2">
-                <div class="metric-card" style="border-top:3px solid #16a34a">
-                    <p class="value" id="r-compliance" style="color:#16a34a">-</p>
-                    <p class="label">Compliance Rate</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-2">
-                <div class="metric-card" style="border-top:3px solid #16a34a">
-                    <p class="value" id="r-in-sla" style="color:#16a34a">-</p>
-                    <p class="label">Within SLA</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-2">
-                <div class="metric-card" style="border-top:3px solid #ea580c">
-                    <p class="value" id="r-at-risk" style="color:#ea580c">-</p>
-                    <p class="label">At Risk</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-2">
-                <div class="metric-card" style="border-top:3px solid #dc2626">
-                    <p class="value" id="r-breached" style="color:#dc2626">-</p>
-                    <p class="label">Breached</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-2">
-                <div class="metric-card" style="border-top:3px solid #2563eb">
-                    <p class="value" id="r-resolved-ok" style="color:#2563eb">-</p>
-                    <p class="label">Resolved Within SLA</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-2">
+            <div class="col-6 col-md-3 col-lg-1-5">
                 <div class="metric-card" style="border-top:3px solid #6b7280">
                     <p class="value" id="r-total" style="color:#6b7280">-</p>
                     <p class="label">Total Tickets</p>
                 </div>
             </div>
-        </div>
-
-        <!-- Response & Resolution SLA Met/Missed -->
-        <p class="section-title">Response & Resolution SLA</p>
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-md-3 col-lg-1-5">
+                <div class="metric-card" style="border-top:3px solid #3b82f6">
+                    <p class="value" id="r-open" style="color:#3b82f6">-</p>
+                    <p class="label">Open</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-1-5">
+                <div class="metric-card" style="border-top:3px solid #2563eb">
+                    <p class="value" id="r-assigned" style="color:#2563eb">-</p>
+                    <p class="label">Assigned</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-1-5">
+                <div class="metric-card" style="border-top:3px solid #eab308">
+                    <p class="value" id="r-in-progress" style="color:#eab308">-</p>
+                    <p class="label">In Progress</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-1-5">
                 <div class="metric-card" style="border-top:3px solid #16a34a">
-                    <p class="value" id="r-resp-met" style="color:#16a34a">-</p>
-                    <p class="label">Response SLA Met</p>
+                    <p class="value" id="r-resolved" style="color:#16a34a">-</p>
+                    <p class="label">Resolved</p>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-md-3 col-lg-1-5">
+                <div class="metric-card" style="border-top:3px solid #0f172a">
+                    <p class="value" id="r-closed" style="color:#0f172a">-</p>
+                    <p class="label">Closed</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-1-5">
                 <div class="metric-card" style="border-top:3px solid #dc2626">
-                    <p class="value" id="r-resp-miss" style="color:#dc2626">-</p>
-                    <p class="label">Response SLA Missed</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="metric-card" style="border-top:3px solid #16a34a">
-                    <p class="value" id="r-res-met" style="color:#16a34a">-</p>
-                    <p class="label">Resolution SLA Met</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="metric-card" style="border-top:3px solid #dc2626">
-                    <p class="value" id="r-res-miss" style="color:#dc2626">-</p>
-                    <p class="label">Resolution SLA Missed</p>
+                    <p class="value" id="r-overdue" style="color:#dc2626">-</p>
+                    <p class="label">Overdue</p>
                 </div>
             </div>
         </div>
 
-        <!-- Average Times -->
-        <p class="section-title">Average Times</p>
+        <!-- Charts Row 1 -->
         <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-                <div class="metric-card" style="border-top:3px solid #7c3aed">
-                    <p class="value" id="r-avg-response" style="color:#7c3aed;font-size:1.4rem">-</p>
-                    <p class="label">Avg Response Time</p>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="metric-card" style="border-top:3px solid #0891b2">
-                    <p class="value" id="r-avg-resolution" style="color:#0891b2;font-size:1.4rem">-</p>
-                    <p class="label">Avg Resolution Time</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <div class="chart-container" style="height:280px">
                     <p class="section-title mb-2">Ticket Status</p>
                     <canvas id="statusChart" style="max-height:220px"></canvas>
                 </div>
             </div>
-            <div class="col-md-7">
+            <div class="col-md-4">
                 <div class="chart-container" style="height:280px">
                     <p class="section-title mb-2">Tickets by Priority</p>
                     <canvas id="priorityChart" style="max-height:220px"></canvas>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="chart-container" style="height:280px">
+                    <p class="section-title mb-2">Tickets by Department</p>
+                    <canvas id="deptChart" style="max-height:220px"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="chart-container" style="height:280px">
+                    <p class="section-title mb-2">Monthly Tickets</p>
+                    <canvas id="trendChart" style="max-height:220px"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container" style="height:280px">
+                    <p class="section-title mb-2">Staff Workload (Active)</p>
+                    <canvas id="workloadChart" style="max-height:220px"></canvas>
                 </div>
             </div>
         </div>
@@ -164,9 +142,9 @@
                         <th>Title</th>
                         <th>Priority</th>
                         <th>Status</th>
-                        <th>SLA Status</th>
-                        <th>Response Deadline</th>
-                        <th>Resolution Deadline</th>
+                        <th>Department</th>
+                        <th>Assigned To</th>
+                        <th>Due Date</th>
                         <th>Created</th>
                     </tr>
                 </thead>
@@ -187,24 +165,10 @@
     if (!requireAuth(['admin'])) throw new Error('auth');
     Sidebar.inject('admin', 'admin-report.html');
 
-    let statusChart, priorityChart;
-
-    function fmtMinutes(m) {
-        if (m === null || m === undefined) return 'N/A';
-        const mins = Number(m);
-        if (isNaN(mins)) return 'N/A';
-        const h = Math.floor(Math.abs(mins) / 60), min = Math.abs(mins) % 60;
-        if (h === 0) return min + 'm';
-        return h + 'h ' + min + 'm';
-    }
+    let statusChart, priorityChart, deptChart, trendChart, workloadChart;
 
     function fmt(d) {
         return d ? new Date(d).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A';
-    }
-
-    function slaBadgeHtml(status) {
-        const cls = { 'IN SLA': 'sla-in', 'AT RISK': 'sla-risk', 'BREACHED': 'sla-breach' }[status] || '';
-        return status ? `<span class="sla-badge ${cls}">${status}</span>` : '<span class="text-muted small">-</span>';
     }
 
     async function loadReport() {
@@ -217,21 +181,19 @@
             ]);
 
             if (sr) {
-                document.getElementById('r-compliance').textContent    = (sr.slaCompliancePercent ?? '-') + (sr.slaCompliancePercent !== undefined ? '%' : '');
-                document.getElementById('r-in-sla').textContent        = sr.inSla    ?? '-';
-                document.getElementById('r-at-risk').textContent       = sr.atRisk   ?? '-';
-                document.getElementById('r-breached').textContent      = sr.breached ?? '-';
-                document.getElementById('r-resolved-ok').textContent   = sr.resolvedWithinSla ?? '-';
-                document.getElementById('r-total').textContent         = sr.total    ?? '-';
-                document.getElementById('r-resp-met').textContent      = sr.responseSlaMetCount  ?? '-';
-                document.getElementById('r-resp-miss').textContent     = sr.responseSla_missed   ?? '-';
-                document.getElementById('r-res-met').textContent       = sr.resolutionSlaMetCount ?? '-';
-                document.getElementById('r-res-miss').textContent      = sr.resolutionSla_missed  ?? '-';
-                document.getElementById('r-avg-response').textContent  = fmtMinutes(sr.avgResponseMinutes);
-                document.getElementById('r-avg-resolution').textContent = fmtMinutes(sr.avgResolutionMinutes);
+                document.getElementById('r-total').textContent       = sr.total       ?? '-';
+                document.getElementById('r-open').textContent        = sr.open        ?? '-';
+                document.getElementById('r-assigned').textContent    = sr.assigned    ?? '-';
+                document.getElementById('r-in-progress').textContent = sr.inProgress  ?? '-';
+                document.getElementById('r-resolved').textContent    = sr.resolved    ?? '-';
+                document.getElementById('r-closed').textContent      = sr.closed      ?? '-';
+                document.getElementById('r-overdue').textContent     = sr.overdue     ?? '-';
 
                 buildStatusChart(sr);
                 if (sr.ticketsByPriority) buildPriorityChart(sr.ticketsByPriority);
+                if (sr.ticketsByDepartment) buildDeptChart(sr.ticketsByDepartment);
+                if (sr.monthlyTrend) buildTrendChart(sr.monthlyTrend);
+                if (sr.staffWorkload) buildWorkloadChart(sr.staffWorkload);
             }
 
             if (tr && tr.success) {
@@ -251,9 +213,9 @@
         statusChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Open', 'In Progress', 'Resolved'],
-                datasets: [{ data: [sr.open || 0, sr.inProgress || 0, sr.resolved || 0],
-                    backgroundColor: ['rgba(31, 51, 115, 0.2)','rgba(180, 83, 9, 0.2)','rgba(22, 101, 52, 0.2)'], borderWidth: 1 }]
+                labels: ['Open', 'Assigned', 'In Progress', 'Resolved', 'Closed'],
+                datasets: [{ data: [sr.open || 0, sr.assigned || 0, sr.inProgress || 0, sr.resolved || 0, sr.closed || 0],
+                    backgroundColor: ['rgba(59, 130, 246, 0.4)','rgba(37, 99, 235, 0.4)','rgba(234, 179, 8, 0.4)','rgba(22, 163, 74, 0.4)','rgba(15, 23, 42, 0.4)'], borderWidth: 1 }]
             },
             options: { responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { position: 'right' } } }
@@ -270,12 +232,71 @@
                 datasets: [{
                     label: 'Tickets',
                     data: [bp.Critical || 0, bp.High || 0, bp.Medium || 0, bp.Low || 0],
-                    backgroundColor: ['rgba(220, 38, 38, 0.2)','rgba(31, 51, 115, 0.2)','rgba(100, 116, 139, 0.2)','rgba(100, 116, 139, 0.1)']
+                    backgroundColor: ['rgba(220, 38, 38, 0.4)','rgba(31, 51, 115, 0.4)','rgba(100, 116, 139, 0.4)','rgba(100, 116, 139, 0.1)']
                 }]
             },
             options: { responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+    }
+
+    function buildDeptChart(bd) {
+        const ctx = document.getElementById('deptChart').getContext('2d');
+        if (deptChart) deptChart.destroy();
+        const labels = Object.keys(bd);
+        const data = Object.values(bd);
+        deptChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: ['rgba(124, 58, 237, 0.4)', 'rgba(8, 145, 178, 0.4)', 'rgba(219, 39, 119, 0.4)', 'rgba(217, 119, 6, 0.4)']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        });
+    }
+
+    function buildTrendChart(mt) {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        if (trendChart) trendChart.destroy();
+        const labels = Object.keys(mt);
+        const data = Object.values(mt);
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Created Tickets',
+                    data: data,
+                    borderColor: 'rgba(31, 51, 115, 0.8)',
+                    backgroundColor: 'rgba(31, 51, 115, 0.1)',
+                    fill: true,
+                    tension: 0.1
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    function buildWorkloadChart(sw) {
+        const ctx = document.getElementById('workloadChart').getContext('2d');
+        if (workloadChart) workloadChart.destroy();
+        const labels = Object.keys(sw);
+        const data = Object.values(sw);
+        workloadChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Active Tickets',
+                    data: data,
+                    backgroundColor: 'rgba(8, 145, 178, 0.4)'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
         });
     }
 
@@ -291,9 +312,9 @@
                 <td class="fw-semibold">${t.title}</td>
                 <td>${UI.priorityBadge(t.priority)}</td>
                 <td>${UI.statusBadge(t.status)}</td>
-                <td>${slaBadgeHtml(t.slaStatus)}</td>
-                <td style="font-size:.8rem">${fmt(t.responseSlaDeadline)}</td>
-                <td style="font-size:.8rem">${fmt(t.resolutionSlaDeadline)}</td>
+                <td>${t.category || '<span class="text-muted small">-</span>'}</td>
+                <td>${t.assignedTo || '<span class="text-muted small">-</span>'}</td>
+                <td style="font-size:.8rem">${fmt(t.dueDate)}</td>
                 <td style="font-size:.8rem">${fmt(t.createdAt)}</td>
             </tr>`).join('');
     }

@@ -94,7 +94,7 @@ public class TicketControllerTest {
     public void testAdminSeesAllTickets() throws Exception {
         mockMvc.perform(get("/api/tickets"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(2)));
+                .andExpect(jsonPath("$", hasSize(2)));
     }
 
     @Test
@@ -102,8 +102,8 @@ public class TicketControllerTest {
     public void testStaffSeesOnlyAssignedTickets() throws Exception {
         mockMvc.perform(get("/api/tickets"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].title").value("Admin assigned ticket"));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].title").value("Admin assigned ticket"));
     }
 
     @Test
@@ -111,8 +111,8 @@ public class TicketControllerTest {
     public void testConsumerSeesOnlyOwnTickets() throws Exception {
         mockMvc.perform(get("/api/tickets"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].title").value("Admin assigned ticket"));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].title").value("Admin assigned ticket"));
     }
 
     @Test

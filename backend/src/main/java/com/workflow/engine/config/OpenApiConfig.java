@@ -21,9 +21,9 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Carbochem Helpdesk & SLA Engine API")
+                        .title("Carbochem Helpdesk API")
                         .version("1.0.0")
-                        .description("REST API specifications, models, validation criteria, and SLA tracking fields for the Carbochem Helpdesk."))
+                        .description("REST API specifications, models, and validation criteria for the Carbochem Helpdesk."))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth", new SecurityScheme()

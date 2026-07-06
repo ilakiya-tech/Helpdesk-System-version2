@@ -7,9 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
- * Entry point. @EnableScheduling activates TicketService's 60-second
- * escalation sweep (@Scheduled fixedRate = 60000).
- * @ConfigurationPropertiesScan registers SlaProperties binding automatically.
+ * Entry point for the Carbochem Helpdesk Application.
  */
 @SpringBootApplication
 @EnableScheduling

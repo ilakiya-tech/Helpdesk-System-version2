@@ -166,16 +166,18 @@ public class AuthController {
 
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
-            response.put("success", false);
-            response.put("message", "Username not found");
-            return ResponseEntity.status(404).body(response);
+            // Mask response to prevent username enumeration
+            response.put("success", true);
+            response.put("message", "OTP has been sent to your registered email");
+            return ResponseEntity.ok(response);
         }
 
         User user = userOpt.get();
         if (user.getEmail() == null || user.getEmail().isBlank()) {
-            response.put("success", false);
-            response.put("message", "No email registered for this user");
-            return ResponseEntity.status(400).body(response);
+            // Mask response to prevent email presence enumeration
+            response.put("success", true);
+            response.put("message", "OTP has been sent to your registered email");
+            return ResponseEntity.ok(response);
         }
 
         // Generate 6 digit OTP
@@ -204,8 +206,8 @@ public class AuthController {
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
             response.put("success", false);
-            response.put("message", "Username not found");
-            return ResponseEntity.status(404).body(response);
+            response.put("message", "Invalid or expired OTP");
+            return ResponseEntity.status(400).body(response);
         }
 
         User user = userOpt.get();

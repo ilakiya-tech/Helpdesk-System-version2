@@ -26,8 +26,8 @@ public class ReportController {
     @GetMapping("/summary")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
-        summary = "Get SLA and ticket summary reports",
-        description = "Returns aggregate counts and SLA compliance percentages (Breached, In SLA, Response / Resolution average times) for the Admin dashboard.",
+        summary = "Get helpdesk and ticket summary reports",
+        description = "Returns aggregate counts and distributions (status, priority, department, monthly trend, and staff workload) for the Admin dashboard.",
         security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({

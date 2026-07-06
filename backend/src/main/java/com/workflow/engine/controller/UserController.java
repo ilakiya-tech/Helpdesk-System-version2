@@ -68,7 +68,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CONSUMER', 'STAFF', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.getUser().getId()")
     @Operation(
         summary = "Update user details",
         description = "Updates user account fields. Encrypts password changes using BCrypt before persistence.",
@@ -95,6 +95,11 @@ public class UserController {
                     }
                     if (updated.getRole() != null) {
                         existing.setRole(updated.getRole());
+                    }
+                    if ("consumer".equalsIgnoreCase(existing.getRole())) {
+                        existing.setDepartment(null);
+                        existing.setDesignation(null);
+                        existing.setSpecialization(null);
                     }
                     if (updated.getPassword() != null && !updated.getPassword().isEmpty() && !updated.getPassword().equals(existing.getPassword())) {
                         existing.setPassword(passwordEncoder.encode(updated.getPassword()));

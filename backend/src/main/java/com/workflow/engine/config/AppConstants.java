@@ -38,13 +38,6 @@ public final class AppConstants {
     public static final String PRIORITY_CRITICAL = "Critical";
 
     // -------------------------------------------------------------------------
-    // SLA Status Values
-    // -------------------------------------------------------------------------
-    public static final String SLA_STATUS_IN_SLA   = "IN SLA";
-    public static final String SLA_STATUS_AT_RISK  = "AT RISK";
-    public static final String SLA_STATUS_BREACHED = "BREACHED";
-
-    // -------------------------------------------------------------------------
     // Authentication
     // -------------------------------------------------------------------------
     /**
